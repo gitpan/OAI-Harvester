@@ -1,5 +1,8 @@
 Revision history for Perl extension OAI.pm.
 
+0.4  Thu Aug 07 17:22:12 2003
+	- fixed doc error (thanks Tajoli Zeno)
+
 0.3  Mon Jul 28 11:35:37 2003
 	- added asString() method to Net::OAI::Record::OAI_DC
 	- added oai-listrecords utility

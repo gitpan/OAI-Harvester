@@ -21,7 +21,7 @@ use Net::OAI::ListSets;
 use Net::OAI::Record::Header;
 use Net::OAI::Record::OAI_DC;
 
-our $VERSION = 0.3;
+our $VERSION = 0.4;
 
 
 =head1 NAME
@@ -48,7 +48,7 @@ Net::OAI::Harvester - A package for harvesting metadata using OAI-PMH
 
     ## find out the name for a repository
     my $identity = $harvester->identify();
-    print "name: ",$identity->name(),"\n";
+    print "name: ",$identity->repositoryName(),"\n";
 
     ## get a list of identifiers 
     my $identifiers = $harvester->listIdentifiers(
