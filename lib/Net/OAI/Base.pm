@@ -8,11 +8,57 @@ Net::OAI::Base - A base class for all OAI-PMH responses
 
 =head1 SYNOPSIS
 
+    if ( $object->token() ) { 
+	...
+    }
+
+    if ( $object->errorCode() ) { 
+	print "verb action resulted in error code:" . $object->errorCode() . 
+	    " message:" . $object->errorString() . "\n";
+    }
+
+    print "xml response can be found here: " . $obj->file() . "\n";
+    print "the response xml is " . $obj->xml(); 
+
 =head1 DESCRIPTION
+
+Net::OAI::Base is the base class for all the OAI-PMH verb responses. It is
+used to provide similar methods to all the responses. The following 
+classes inherit from Net::OAI::Base.
+
+=over 4
+
+=item * 
+
+Net::OAI::GetRecord
+
+=item *
+
+Net::OAI::Identify
+
+=item * 
+
+Net::OAI::ListIdentifiers
+
+=item *
+
+Net::OAI::ListMetadataFormats
+
+=item *
+
+Net::OAI::ListRecords
+
+=item * 
+
+Net::OAI::ListSets
+
+=back
 
 =head1 METHODS
 
 =head2 errorCode()
+
+Returns an error code associated with the verb result.
 
 =cut
 
@@ -26,6 +72,8 @@ sub errorCode {
 
 =head2 errorString()
 
+Returns an error message associated with an error code.
+
 =cut
 
 sub errorString {
@@ -38,7 +86,7 @@ sub errorString {
 
 =head2 resumptionToken() 
 
-Returns the resumption token object.
+Returns a Net::OAI::ResumptionToken object associated with the call. 
 
 =cut
 
@@ -49,20 +97,23 @@ sub resumptionToken {
 
 =head2 xml()
 
-Returns the raw content of the response as XML.
+Returns a reference to a scalar that contains the raw content of the response 
+as XML.
 
 =cut 
 
 sub xml {
     my(  $self, %args ) = shift;
     open( XML, $self->{ file } ) || die "unable to open $self->{ file }";
-    while( <XML> ) { print; }
-    close( XML );
+    ## slurp entire file into $xml
+    local $/ = undef;
+    my $xml = <XML>;
+    return( $xml );
 }
 
 =head2 file()
 
-Returns the file location of the XML response.
+Returns the path to a file that contains the complete XML response.
 
 =cut
 

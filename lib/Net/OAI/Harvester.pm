@@ -21,7 +21,7 @@ use Net::OAI::ListSets;
 use Net::OAI::Record::Header;
 use Net::OAI::Record::OAI_DC;
 
-our $VERSION = 0.1;
+our $VERSION = 0.2;
 
 
 =head1 NAME
@@ -35,6 +35,17 @@ Net::OAI::Harvester - A package for harvesting metadata using OAI-PMH
 	baseURL => ''http://memory.loc.gov/cgi-bin/oai2_0'
     );
 
+    ## list all the records in a repository
+    my $records = $harvester->listRecords( 
+	'metadataPrefix'    => 'oai_dc' 
+    );
+    while ( my $record = $records->next() ) {
+	my $header = $record->header();
+	my $metadata = $record->metadata();
+	print "identifier: ", $header->identifier(), "\n";
+	print "title: ", $metadata->title(), "\n";
+    }
+
     ## find out the name for a repository
     my $identity = $harvester->identify();
     print "name: ",$identity->name(),"\n";
@@ -44,7 +55,7 @@ Net::OAI::Harvester - A package for harvesting metadata using OAI-PMH
 	'metadataPrefix'    => 'oai_dc'
     );
     while ( my $header = $identifiers->next() ) {
-	print "identifier: ",$header->identifier(),"\n";
+	print "identifier: ",$header->identifier(), "\n";
     }
 
     ## list all the records in a repository
@@ -62,16 +73,16 @@ Net::OAI::Harvester - A package for harvesting metadata using OAI-PMH
 
 =head1 DESCRIPTION
 
-Net::OAI::Harvester is a Perl extension for easily querying OAI-PMH repositories. 
-OAI-PMH is the Open Archives Initiative Protocol for Metadata Harvesting. 
-OAI-PMH allows data repositories to share metadata about their digital assets. 
-Net::OAI::Harvester is a OAI-PMH client, so it does for OAI-PMH what LWP::UserAgent 
-does for HTTP. 
+Net::OAI::Harvester is a Perl extension for easily querying OAI-PMH 
+repositories. OAI-PMH is the Open Archives Initiative Protocol for Metadata 
+Harvesting.  OAI-PMH allows data repositories to share metadata about their 
+digital assets.  Net::OAI::Harvester is a OAI-PMH client, so it does for 
+OAI-PMH what LWP::UserAgent does for HTTP. 
 
 You create a Net::OAI::Harvester object which you can then use to 
 retrieve metadata from a selected repository. Net::OAI::Harvester tries to keep 
 things simple by providing an API to get at the data you want; but it also has 
-a framework which is easy to extend should you need to get more complicated.
+a framework which is easy to extend should you need to get more fancy.
 
 The guiding principle behind OAI-PMH is to allow metadata about online 
 resources to be shared by data providers, so that the metadata can be harvested
@@ -83,8 +94,8 @@ would like to do your own parsing of metadata elements.
 
 A OAI-PMH repository supports 6 verbs: GetRecord, Identify, ListIdentifiers, 
 ListMetadataFormats, ListRecords, and ListSets. The verbs translate directly 
-into methods that you can call on a Net::OAI::Harvester object. More details about
-these methods are supplied below, however for the real story please 
+into methods that you can call on a Net::OAI::Harvester object. More details 
+about these methods are supplied below, however for the real story please 
 consult the spec at http://www.openarchives.org.
 
 Net::OAI::Harvester has a few features that are worth mentioning:
@@ -236,10 +247,10 @@ sub listMetadataFormats {
 
 getRecord() is used to retrieve a single record from a repository. You must pass
 in the C<identifier> and an optional C<metadataPrefix> parameters to identify 
-the record, and the flavor of metadata you would like. Net::OAI::Harvester includes 
-a parser for OAI DublinCore, so if you do not specifiy a metadataPrefix 
-'oai_dc' will be assumed. If you would like to drop in you own XML::Handler 
-for another type of metadata use the C<handler> parameter.
+the record, and the flavor of metadata you would like. Net::OAI::Harvester 
+includes a parser for OAI DublinCore, so if you do not specifiy a 
+metadataPrefix 'oai_dc' will be assumed. If you would like to drop in you own 
+XML::Handler for another type of metadata use the C<metadataHandler> parameter.
 
     my $record = $harvester->getRecord( 
 	identifier	=> 'abc123',
@@ -248,7 +259,15 @@ for another type of metadata use the C<handler> parameter.
     ## get the Net::OAI::Record::Header object
     my $header = $record->header();
 
-    ## get the metadata object (default will be an Net::OAI::Record::OAI_DC object)
+    ## get the metadata object 
+    my $metadata = $record->metadata();
+
+    ## or if you would rather use your own XML::Handler 
+    my $handler = MyHandler->new();
+    my $record = $harvester->getRecord(
+	identifier		=> 'abc123',
+	metadataHandler		=> $handler
+    );
     my $metadata = $record->metadata();
     
 =cut 
@@ -266,13 +285,14 @@ sub getRecord {
 	metadataPrefix	=> $opts{ 'metadataPrefix' }
     );
     my $record = Net::OAI::GetRecord->new( $self->_get( $uri ) );
-    my $dc = Net::OAI::Record::OAI_DC->new();
-    my $header = Net::OAI::Record::Header->new( Handler => $dc );
+    my $metadataHandler = $opts{ metadataHandler } 
+	|| Net::OAI::Record::OAI_DC->new();
+    my $header = Net::OAI::Record::Header->new( Handler => $metadataHandler );
     my $error = Net::OAI::Error->new( Handler => $header );
     my $parser = XML::SAX::ParserFactory->parser( Handler => $error );
     my $data = $parser->parse_uri( $record->file() );
     $record->{ error } = $error;
-    $record->{ metadata } = $dc;
+    $record->{ metadata } = $metadataHandler;
     $record->{ header } = $header;
     return( $record );
 }
@@ -490,11 +510,15 @@ sub _get {
 
 =item * 
 
-DOCUMENT, DOCUMENT, DOCUMENT!!!
-
-=item *
-
 More documentation of other classes.
+
+=item * 
+
+Document custom XML::Handler creation.
+
+=item * 
+
+Handle optional compression.
 
 =item * 
 
