@@ -21,8 +21,8 @@ use Net::OAI::ListSets;
 use Net::OAI::Record::Header;
 use Net::OAI::Record::OAI_DC;
 
-our $VERSION = 0.96;
-
+our $VERSION = 0.97;
+our $DEBUG = 0;
 
 =head1 NAME
 
@@ -134,7 +134,9 @@ object, identify() returns an Net::OAI::Identify object, and so on. So when
 you use one of these methods you'll probably want to check out the docs for 
 the object that gets returned so you can see what to do with it. Many 
 of these classes inherit from Net::OAI::Base which provides some base 
-functionality for retrieving errors, etc.
+functionality for retrieving errors, getting the raw XML, and the 
+temporary file where the XML is stored (see Net::OAI::Base documentation for
+more details).
 
 =head2 new()
 
@@ -145,6 +147,17 @@ available on the Open Archives Initiative homepage.
 
     my $harvester = Net::OAI::Harvester->new(
 	baseURL => 'http://memory.loc.gov/cgi-bin/oai2_0'
+    );
+
+If you would like to fine tune the HTTP client used by Net::OAI::Harvester
+you can pass in a configured object. For example this can be handy if you 
+want to adjust the client timeout:
+
+    my $ua = LWP::UserAgent->new();
+    $ua->timeout(20); ## set timeout to 20 seconds
+    my $harvester = Net::OAI::Harvester->new(
+        baseURL     => 'http://memory.loc.gov/cgi-bin/oai2_0',
+        userAgent   => $ua 
     );
 
 =cut
@@ -159,11 +172,7 @@ sub new {
     croak( "new() needs the baseUrl parameter" ) if !$normalOpts{ BASEURL };
     my $baseURL = URI->new( $normalOpts{ BASEURL } ); 
 
-    my $self = bless( 
-	{
-	    baseURL	    => $baseURL,
-	    debug	    => 0
-	}, ref( $class ) || $class );
+    my $self = bless( { baseURL => $baseURL }, ref( $class ) || $class );
 
     ## set the user agent
     if ( $normalOpts{ USERAGENT } ) { 
@@ -206,6 +215,7 @@ sub identify {
     my $token = Net::OAI::ResumptionToken->new( Handler => $identity );
     my $error = Net::OAI::Error->new( Handler => $token );
     my $parser = _parser( $error ); 
+    debug( "parsing Identify response " .  $identity->file() );
     eval { $parser->parse_uri( $identity->file() ) };
     if ( $@ ) { _xmlError( $error ); } 
     $identity->{ token } = $token->token() ? $token : undef;
@@ -249,6 +259,7 @@ sub listMetadataFormats {
     my $token = Net::OAI::ResumptionToken->new( Handler => $list );
     my $error = Net::OAI::Error->new( Handler => $token );
     my $parser = _parser( $error );
+    debug( "parsing ListMetadataFormats response: ".$list->file() );
     eval{ $parser->parse_uri( $list->file() ) };
     if ( $@ ) { _xmlError( $error ); } 
     $list->{ token } = $token->token() ? $token : undef;
@@ -315,6 +326,7 @@ sub getRecord {
     my $header = Net::OAI::Record::Header->new( Handler => $metadataHandler );
     my $error = Net::OAI::Error->new( Handler => $header );
     my $parser = _parser( $error ); 
+    debug( "parsing GetRecord response " . $record->file() );
     $parser->parse_uri( $record->file() );
     if ( $@ ) { _xmlError( $error ); } 
 
@@ -414,6 +426,7 @@ sub listRecords {
     my $token = Net::OAI::ResumptionToken->new( Handler => $list );
     my $error = Net::OAI::Error->new( Handler => $token );
     my $parser = _parser( $error ); 
+    debug( "parsing ListRecords response " . $list->file() );
     eval { $parser->parse_uri( $list->file() ) };
     if ( $@ ) { _xmlError( $error ); } 
 
@@ -431,6 +444,7 @@ submit resumption tokens as needed.
 
 sub listAllRecords {
     my $self = shift;
+    debug( "calling listRecords() as part of listAllRecords request" );
     my $list = listRecords( $self, @_ );
     $list->{ harvester } = $self;
     return( $list );
@@ -481,6 +495,7 @@ sub listIdentifiers {
     my $token = Net::OAI::ResumptionToken->new( Handler => $list );
     my $error = Net::OAI::Error->new( Handler => $token );
     my $parser = _parser( $error );
+    debug( "parsing ListIdentifiers response " . $list->file() );
     eval { $parser->parse_uri( $list->file() ) };
     if ( $@ ) { _xmlError( $error ); } 
     $list->{ token } = $token->token() ? $token : undef; 
@@ -497,6 +512,7 @@ submit resumption tokens as needed.
 
 sub listAllIdentifiers {
     my $self = shift;
+    debug( "calling listIdentifiers() as part of listAllIdentifiers() call" );
     my $list = listIdentifiers( $self, @_ );
     $list->{ harvester } = $self;
     return( $list );
@@ -531,6 +547,7 @@ sub listSets {
     my $token = Net::OAI::ResumptionToken->new( Handler => $list );
     my $error = Net::OAI::Error->new( Handler => $token );
     my $parser = _parser( $error );
+    debug( "parsing ListSets response " . $list->file() );
     eval{ $parser->parse_uri( $list->file() ) };
     if ( $@ ) { _xmlError( $error ); } 
     $list->{ error } = $error;
@@ -574,24 +591,6 @@ sub userAgent {
     return( $self->{ userAgent } );
 }
 
-=head2 debug() 
-
-If you would like to start or stop receiving diagnostic information on 
-STDERR pass in a true or false value.
-
-    ## turn on debugging
-    $harvester->debug( 1 );  
-
-    ## turn off debugging
-    $harvester->debug( 0 );
-
-=cut
-
-sub debug { 
-    my ( $self, $arg ) = @_;
-    $self->{ debug } = $arg ? 1 : 0;
-}
-
 ## internal stuff
 
 sub _get {
@@ -599,12 +598,13 @@ sub _get {
     my $ua = $self->{ userAgent };
     my ( $fh, $file ) = tempfile();
     binmode( $fh, ':utf8' );
-    $self->_debug( "fetching ".$uri->as_string() );
+    debug( "fetching ".$uri->as_string() );
     my $request = HTTP::Request->new( GET => $uri->as_string() );
     my $response = $ua->request( $request, sub { print $fh shift; }, 4096 );
     close( $fh );
 
     if ( $response->is_error() ) { 
+        debug( "caught HTTP level error" . $response->message() );
         my $error = Net::OAI::Error->new(
             errorString     => 'HTTP Level Error: ' . $response->message(),
             errorCode       => $response->code()
@@ -629,6 +629,7 @@ sub _parser {
 
 sub _xmlError {
     my $e = shift;
+    debug( "caught xml parsing error" );
     $e->errorString( "XML parsing error: $@" );
     $e->errorCode( 'xmlParseError' );
 }
@@ -645,10 +646,10 @@ sub _verifyMetadataHandler {
 }
 
 
-sub _debug {
-    my ( $self, $msg ) = @_;
-    if ( $self->{ debug } ) { 
-	print STDERR localtime().": $msg\n";
+sub debug {
+    my $msg = shift; 
+    if ( $Net::OAI::Harvester::DEBUG ) { 
+	print STDERR "ockham-harvester: " . localtime() . ": $msg\n";
     }
 }
 
@@ -658,6 +659,12 @@ sub _fatal {
     exit( 1 );
 }
 
+=head1 DIAGNOSTICS
+
+If you would like to see diagnostic information when harvesting is running 
+then set Net::OAI::Harvester::DEBUG to a true value.
+
+    $Net::OAI::Harvester::DEBUG = 1;
 
 =head1 PERFORMANCE 
 

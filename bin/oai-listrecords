@@ -2,7 +2,7 @@
 
 =head1 NAME
 
-listrecords - list records in an OAI-PMH archive
+oai-listrecords - list records in an OAI-PMH archive
 
 =head1 SYNOPSIS
 
@@ -50,7 +50,7 @@ if ( !$url or !$metadataPrefix ) {
 }
 
 my $harvester = Net::OAI::Harvester->new( baseURL => $url );
-$harvester->debug( $debug );
+$Net::OAI::Harvester::DEBUG = 1 if $debug;
 
 my %opts = ( 'metadataPrefix'	=> $metadataPrefix );
 $opts{ 'from' } = $from if $from;

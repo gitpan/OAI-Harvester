@@ -132,6 +132,7 @@ sub end_element {
 	);
 
 	## commit the object to disk
+        Net::OAI::Harvester::debug( "committing record to object store" );
 	store_fd( $record, $self->{ recordsFileHandle } );
     } 
 

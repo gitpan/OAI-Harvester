@@ -2,7 +2,7 @@
 
 =head1 NAME
 
-listsets - list sets in an OAI-PMH archive
+oai-listsets - list sets in an OAI-PMH archive
 
 =head1 SYNOPSIS
 
@@ -40,7 +40,8 @@ if ( !$url ) {
 }
 
 my $harvester = Net::OAI::Harvester->new( baseURL => $url );
-$harvester->debug( $debug );
+$Net::OAI::Harvester::DEBUG = 1 if $debug;
+
 my $list = $harvester->listSets();
 
 if ( $list->errorCode() ) { 

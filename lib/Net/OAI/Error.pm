@@ -127,6 +127,7 @@ sub start_element {
     if ( $tagName eq 'error' ) {
 	$self->{ errorCode } = $element->{ Attributes }{ '{}code' }{ Value };
 	$self->{ insideError } = 1;
+        Net::OAI::Harvester::debug( "caught error" );
     } else { 
 	$self->SUPER::start_element( $element );
     }

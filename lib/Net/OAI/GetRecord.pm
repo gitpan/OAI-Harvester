@@ -73,6 +73,7 @@ sub end_element {
     my ( $self, $element ) = @_;
     my $tagName = $element->{ Name };
     if ( $tagName eq 'header' ) {
+        Net:OAI::Harvester::debug( "found header" );
 	my $header = Net::OAI::Record::Header->new();
 	$header->status( $self->{ headerStatus } );
 	$header->identifier( $self->{ identifier } );
@@ -87,6 +88,7 @@ sub end_element {
 	$self->{ setSpecs } = [];
     }
     elsif ( $tagName eq 'setSpec' ) { 
+        Net::OAI::Harvester::debug( "found setSpec" );
 	push( @{ $self->{ setSpecs } }, $self->{ setSpec } );
 	$self->{ insideSet } = 0;
     }

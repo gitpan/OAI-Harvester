@@ -74,9 +74,11 @@ sub end_element {
     $self->SUPER::end_element( $element );
     if ( $element->{ Name } eq 'header' ) {
 	my $header = $self->get_handler();
+        Net::OAI::Harvester::debug( "committing header to object store" );
 	store_fd( $header, $self->{ headerFileHandle } );
 	$self->set_handler( $self->{ OLD_Handler } );
     } elsif ( $element->{ Name } eq 'ListIdentifiers' ) {
+        Net::OAI::Harvester::debug( "finished reading identifiers" );
 	$self->{ headerFileHandle }->close();
 	$self->{ headerFileHandle } = undef;
     }

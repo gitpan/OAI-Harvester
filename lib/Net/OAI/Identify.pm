@@ -149,10 +149,12 @@ sub end_element {
 
     ## store and reset elements that can have multiple values
     if ( $element->{ Name } eq 'adminEmail' ) {
+        Net::OAI::Harvester::debug( "got adminEmail in Identify" );
 	push( @{ $self->{ adminEmails } }, $self->{ adminEmail } );
 	$self->{ adminEmail } = '';
     }
     elsif ( $element->{ Name } eq 'compression' ) { 
+        Net::OAI::Harvester::debug( "got compression in Identify" );
 	push( @{ $self->{ compressions } }, $self->{ compression } );
 	$self->{ compression } = '';
     }

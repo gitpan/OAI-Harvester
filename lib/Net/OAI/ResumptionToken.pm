@@ -112,6 +112,7 @@ sub start_element {
 sub end_element {
     my ( $self, $element ) = @_;
     if ( $element->{ Name } eq 'resumptionToken' ) {
+        Net::OAI::Harvester::debug( "caught resumption token" );
 	$self->{ insideResumptionToken } = 0;
     } else { 
 	$self->SUPER::end_element( $element );

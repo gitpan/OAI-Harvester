@@ -1,5 +1,14 @@
 Revision history for Perl extension Net::OAI::Harvester
 
+0.97    Tue Aug 30 21:07:05 2004
+        - deprecated Net::OAI::Haverster::debug() in favor of setting
+          Net::OAI::Harvester::DEBUG. This allows for other packages
+          to easily report diagnostics. 
+        - fixed test count in identify 010-identify.t
+        - fixed names of utilities in bin
+        - added some docs concerning Net::OAI::Base and passing in
+          LWP::UserAgent to Net::OAI::Harvester::new().
+
 0.96    Mon Jul 19 22:12:04 2004
         - Fixed Net::OAI::Harvester to return HTTP level errors
         - Fixed Net::OAI::Identity to not run together sub descriptions into
