@@ -35,7 +35,8 @@ were associated with the OAI request.
 =cut
 
 sub errorCode {
-    my $self = shift;
+    my ( $self, $code ) = @_;
+    if ( $code ) { $self->{ errorCode } = $code; }
     return( $self->{ errorCode } );
 }
 
@@ -47,7 +48,8 @@ string if there was no error associated with the OAI request.
 =cut
 
 sub errorString {
-    my $self = shift;
+    my ( $self, $str ) = @_;
+    if ( $str ) { $self->{ errorString } = $str; }
     return( $self->{ errorString } );
 }
 

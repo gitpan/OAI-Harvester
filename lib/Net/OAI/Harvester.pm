@@ -21,7 +21,7 @@ use Net::OAI::ListSets;
 use Net::OAI::Record::Header;
 use Net::OAI::Record::OAI_DC;
 
-our $VERSION = 0.7;
+our $VERSION = 0.75;
 
 
 =head1 NAME
@@ -198,7 +198,11 @@ sub identify {
     my $token = Net::OAI::ResumptionToken->new( Handler => $identity );
     my $error = Net::OAI::Error->new( Handler => $token );
     my $parser = XML::SAX::ParserFactory->parser( Handler => $error );
-    $parser->parse_uri( $identity->file() );
+    eval { $parser->parse_uri( $identity->file() ) };
+    if ( $@ ) {  
+	$error->errorString( "XML parsing error: $@" );
+	$error->errorCode( -1 );
+    }
     $identity->{ token } = $token->token() ? $token : undef;
     $identity->{ error } = $error;
     return( $identity );
@@ -237,7 +241,11 @@ sub listMetadataFormats {
     my $token = Net::OAI::ResumptionToken->new( Handler => $list );
     my $error = Net::OAI::Error->new( Handler => $token );
     my $parser = XML::SAX::ParserFactory->parser( Handler => $error );
-    $parser->parse_uri( $list->file() );
+    eval{ $parser->parse_uri( $list->file() ) };
+    if ( $@ ) {  
+	$error->errorString( "XML parsing error: $@" );
+	$error->errorCode( -1 );
+    }
     $list->{ token } = $token->token() ? $token : undef;
     $list->{ error } = $error;
     return( $list );
@@ -290,7 +298,11 @@ sub getRecord {
     my $header = Net::OAI::Record::Header->new( Handler => $metadataHandler );
     my $error = Net::OAI::Error->new( Handler => $header );
     my $parser = XML::SAX::ParserFactory->parser( Handler => $error );
-    my $data = $parser->parse_uri( $record->file() );
+    $parser->parse_uri( $record->file() );
+    if ( $@ ) {  
+	$error->errorString( "XML parsing error: $@" );
+	$error->errorCode( -1 );
+    }
     $record->{ error } = $error;
     $record->{ metadata } = $metadataHandler;
     $record->{ header } = $header;
@@ -363,7 +375,11 @@ sub listRecords {
     my $token = Net::OAI::ResumptionToken->new( Handler => $list );
     my $error = Net::OAI::Error->new( Handler => $token );
     my $parser = XML::SAX::ParserFactory->parser( Handler => $error );
-    $parser->parse_uri( $list->file() );
+    eval { $parser->parse_uri( $list->file() ) };
+    if ( $@ ) {  
+	$error->errorString( "XML parsing error: $@" );
+	$error->errorCode( -1 );
+    }
     $list->{ error } = $error;
     $list->{ token } = $token->token() ? $token : undef;
     return( $list );
@@ -408,7 +424,11 @@ sub listIdentifiers {
     my $token = Net::OAI::ResumptionToken->new( Handler => $list );
     my $error = Net::OAI::Error->new( Handler => $token );
     my $parser = XML::SAX::ParserFactory->parser( Handler => $error );
-    $parser->parse_uri( $list->file() );
+    eval { $parser->parse_uri( $list->file() ) };
+    if ( $@ ) {  
+	$error->errorString( "XML parsing error: $@" );
+	$error->errorCode( -1 );
+    }
     $list->{ token } = $token->token() ? $token : undef; 
     $list->{ error } = $error;
     return( $list );
@@ -440,7 +460,11 @@ sub listSets {
     my $token = Net::OAI::ResumptionToken->new( Handler => $list );
     my $error = Net::OAI::Error->new( Handler => $token );
     my $parser = XML::SAX::ParserFactory->parser( Handler => $error );
-    $parser->parse_uri( $list->file() );
+    eval{ $parser->parse_uri( $list->file() ) };
+    if ( $@ ) {  
+	$error->errorString( "XML parsing error: $@" );
+	$error->errorCode( -1 );
+    }
     $list->{ error } = $error;
     $list->{ token } = $token->token() ? $token : undef;
     return( $list );
