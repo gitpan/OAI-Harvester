@@ -23,12 +23,36 @@ sub new {
     my $self = bless \%opts, ref( $class ) || $class;
     $self->{ insideList } = 0;
     $self->{ metadataPrefixes } = [];
+    $self->{ namespaces } = [];
+    $self->{ schemas } = [];
     return( $self );
 }
+
+=head2 prefixes()
+
+=cut
 
 sub prefixes() {
     my $self = shift;
     return( @{ $self->{ metadataPrefixes } } );
+}
+
+=head2 namespaces()
+
+=cut
+
+sub namespaces {
+    my $self = shift;
+    return( @{ $self->{ namespaces } } );
+}
+
+=head2 schemas()
+
+=cut
+
+sub schemas {
+    my $self = shift;
+    return( @{ $self->{ schemas } } );
 }
 
 ## SAX Handlers
@@ -45,11 +69,18 @@ sub start_element {
 
 sub end_element {
     my ( $self, $element ) = @_;
-    if ( $element->{ Name } eq 'ListMetadataFormats' ) {
+    my $name = $element->{ Name };
+    if ( $name eq 'ListMetadataFormats' ) {
 	$self->{ insideList } = 0;
-    } elsif ( $element->{ Name } eq 'metadataPrefix' ) {
+    } elsif ( $name eq 'metadataPrefix' ) {
 	push( @{ $self->{ metadataPrefixes } }, $self->{ metadataPrefix } );
 	$self->{ metadataPrefix } = '';
+    } elsif ( $name eq 'schema' ) {
+        push( @{ $self->{ schemas } }, $self->{schema } );
+        $self->{ schema } = '';
+    } elsif ( $name eq 'metadataNamespace' ) {
+        push( @{ $self->{ namespaces } }, $self->{ namespace } );
+        $self->{ namespace } = '';
     } else {
 	$self->SUPER::end_element( $element );
     }

@@ -1,4 +1,4 @@
-use Test::More tests => 8;
+use Test::More tests => 10;
 
 use strict;
 use warnings;
@@ -16,7 +16,14 @@ isa_ok( $l, 'Net::OAI::ListMetadataFormats', 'listMetadataFormats()' );
 ok( ! $l->errorCode(), 'errorCode()' );
 ok( ! $l->errorString(), 'errorString()' );
 
-is( scalar( $l->prefixes() ), 4, 'prefixes() '.join( ';', $l->prefixes() ) );
+my @prefixes = $l->prefixes();
+is( @prefixes, 4, 'prefixes()' );
+
+my @namespaces = $l->namespaces();
+is( @namespaces, 4, 'namespaces()' );
+
+my @schemas = $l->schemas();
+is( @schemas, 4, 'schemas()' );
 
 $l = $h->listMetadataFormats( identifier => 123 );
 is( $l->errorCode(), 'idDoesNotExist', 'expected error code' );

@@ -1,5 +1,9 @@
 Revision history for Perl extension Net::OAI::Harvester
 
+0.99    Tue Feb 22 21:38:16 CST 2005
+        - added namespaces() and schemas() to Net::OAI::ListMetadataFormats
+          and suitable tests.
+
 0.98    Fri Nov 19 09:41:32 CST 2004
         - docfix thanks Brian Cassidy
 
