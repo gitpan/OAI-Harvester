@@ -1,0 +1,26 @@
+use Test::More tests=>8;
+
+use strict;
+use warnings;
+use_ok( 'Net::OAI::Record::Header' );
+
+my $header1 = Net::OAI::Record::Header->new();
+isa_ok( $header1, 'Net::OAI::Record::Header' );
+
+# basic attributes
+
+$header1->status( 'deleted' );
+is( $header1->status(), 'deleted', 'status()' );
+
+$header1->identifier( 'xxx' );
+is( $header1->identifier(), 'xxx', 'identifier()' );
+
+$header1->datestamp( 'May-28-1969' );
+is( $header1->datestamp(), 'May-28-1969', 'datestatmp()' );
+
+$header1->sets( 'foo', 'bar' );
+my @sets1 = $header1->sets();
+is( scalar(@sets1), 2, 'sets() 1' );
+is( $sets1[0], 'foo', 'sets() 2' );
+is( $sets1[1], 'bar', 'sets() 3' );
+

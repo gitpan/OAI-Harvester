@@ -1,0 +1,36 @@
+Net::OAI::Harvester
+-------------------
+
+Net::OAI::Harvester is a Perl library for interacting with OAI-PMH repositories.
+OAI-PMH stands for Open Archives Intitiatve Protocol for Metadata Harvesting.
+More about OAI-PMH can be found at http://www.openarchives.org.
+
+INSTALLATION
+
+You *must* be connected to the Internet to run the test suite.
+
+perl Makefile.PL
+make
+make test
+make install
+
+DEPENDENCIES
+
+OAI-PMH is essentially XML over HTTP so rather than reinvent the wheel there
+are a few dependencies.
+
+LWP::UserAgent - for HTTP 
+XML::SAX - for XML parsing
+URI - for url representation
+YAML - for object serialization
+
+You also probably should be using Perl 5.8.0 at least since many repositories 
+contain UTF8 data.
+
+COPYRIGHT AND LICENCE
+
+This software is free software and may be distributed under the same
+terms as Perl itself .
+
+Copyright (C) 2003 Ed Summers <ehs@pobox.com>
+
