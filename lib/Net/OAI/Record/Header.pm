@@ -35,8 +35,8 @@ sub new {
 
 sub status {
     my ( $self, $status ) = @_;
-    if ( $status ) { $self->{ status } = $status; }
-    return( $self->{ status } );
+    if ( $status ) { $self->{ headerStatus } = $status; }
+    return( $self->{ headerStatus } );
 }
 
 =head2 identifier()
@@ -76,7 +76,8 @@ sub start_element {
     if ( $element->{ Name } eq 'header' ) { 
 	$self->{ insideHeader } = 1;
 	if ( exists( $element->{ Attributes }{ '{}status' } ) ) {
-	    $self->{ headerStatus } = $element->{ Attributes }{ '{}status' };
+	    $self->{ headerStatus } = 
+                $element->{ Attributes }{ '{}status' }{ Value };
 	} else {
 	    $self->{ headerStatus } = '';
 	}

@@ -1,5 +1,11 @@
 Revision history for Perl extension Net::OAI::Harvester
 
+0.95    Thu Apr 1 13:48:54 2004
+        - Fixed behavior of Net::OAI::Harvester::Record::Header::status()
+          which wasn't pulling out the status attribute properly. Thanks
+          Darin Burleigh at wisc.edu. Also added test of status() to 
+          t/005.header.t
+
 0.94	Thu Dec 11 14:04:12 2003
 	- added listAllIdentifiers() and listAllRecords() which automatically
 	  handle resumption tokens.

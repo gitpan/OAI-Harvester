@@ -1,4 +1,4 @@
-use Test::More tests=>8;
+use Test::More tests=>14;
 
 use strict;
 use warnings;
@@ -23,4 +23,24 @@ my @sets1 = $header1->sets();
 is( scalar(@sets1), 2, 'sets() 1' );
 is( $sets1[0], 'foo', 'sets() 2' );
 is( $sets1[1], 'bar', 'sets() 3' );
+
+## fetch a record and see what the status is
+## this may need to be changed over time
+
+use_ok( 'Net::OAI::Harvester' );
+
+my $h = Net::OAI::Harvester->new( 
+    baseURL => 'http://services.nsdl.org:8080/nsdloai/OAI' 
+);
+isa_ok( $h, 'Net::OAI::Harvester', 'new()' );
+
+my $id = 'oai:nsdl.org:316878:oai:asdlib.org:';
+my $r = $h->getRecord( identifier => $id, metadataPrefix => 'oai_dc' );
+ok( ! $r->errorCode(), "errorCode()" );
+ok( ! $r->errorString(), "errorString()" );
+
+my $header = $r->header();
+is( $header->identifier, $id, 'identifier()' );
+is( $header->status(), 'deleted', 'status' );
+
 
