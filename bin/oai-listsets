@@ -25,7 +25,7 @@ archive.
 
 use strict;
 use Getopt::Long;
-use OAI::Harvester;
+use Net::OAI::Harvester;
 use Pod::Usage;
 
 my ( $url ); 
@@ -38,7 +38,7 @@ if ( !$url ) {
     pod2usage( { -verbose => 0 } );
 }
 
-my $harvester = OAI::Harvester->new( baseURL => $url );
+my $harvester = Net::OAI::Harvester->new( baseURL => $url );
 my $list = $harvester->listSets();
 
 if ( $list->errorCode() ) { 

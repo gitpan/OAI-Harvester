@@ -1,6 +1,14 @@
 Revision history for Perl extension OAI.pm.
 
-0.01  Thu May 15 22:37:02 2003
+0.3  Mon Jul 28 11:35:37 2003
+	- added asString() method to Net::OAI::Record::OAI_DC
+	- added oai-listrecords utility
+	- modified Makefile.PL to put oai-listsets and oai-listrecords in bin
+
+0.2  Tue Jul 08 09:59:34 2003
+	- updated docs
+
+0.1  Thu May 15 22:37:02 2003
 	- original version; created by h2xs 1.20 with options
 		-X -P OAI.pm
 

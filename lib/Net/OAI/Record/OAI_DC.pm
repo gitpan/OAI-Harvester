@@ -93,6 +93,17 @@ sub AUTOLOAD {
     }
 }
 
+## generic output method 
+
+sub asString {
+    my $self = shift;
+    foreach my $element ( @OAI_DC_ELEMENTS ) {
+	foreach ( @{ $self->{ $element } } ) {
+	    print "$element => $_\n";
+	}
+    }
+}
+
 ## SAX handlers
 
 sub start_element {

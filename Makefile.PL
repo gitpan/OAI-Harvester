@@ -11,7 +11,11 @@ WriteMakefile(
 			    'XML::SAX'		=> 0,
 			    'URI'		=> 0,
 			    'YAML'		=> 0,
-			    }
+			    },
+    EXE_FILES		=> [ 
+			    'bin/oai-listsets',
+			    'bin/oai-listrecords'
+			   ],
 );
 
 print 
