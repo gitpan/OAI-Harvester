@@ -1,5 +1,10 @@
 Revision history for Perl extension OAI.pm.
 
+0.8  Thu Oct 23 09:16:12 2003
+	- better catching of XML errors
+	- added debug() method
+	- added --debug switch to oai-listrecords
+
 0.75 Wed Oct 22 21:51:08 2003
 	- wrapped XML parsing in eval block to trap fatal errors.
 

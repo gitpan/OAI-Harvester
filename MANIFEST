@@ -18,6 +18,7 @@ lib/Net/OAI/Record/Header.pm
 lib/Net/OAI/Record/OAI_DC.pm
 t/000.harvester.t
 t/001.ua.t
+t/002.error.t
 t/005.header.t
 t/006.resumption.t
 t/010.identify.t

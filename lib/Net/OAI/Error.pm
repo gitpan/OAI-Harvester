@@ -1,7 +1,9 @@
 package Net::OAI::Error;
 
 use strict;
-use base qw( XML::SAX::Base );
+use base qw( XML::SAX::Base Exporter );
+our @EXPORT = (
+);
 
 =head1 NAME
 
@@ -30,7 +32,50 @@ sub new {
 =head2 errorCode()
 
 Returns an OAI error if one was encountered, or the empty string if no errors 
-were associated with the OAI request. 
+were associated with the OAI request.
+
+=over 4
+
+=item 
+
+badArgument
+
+=item 
+
+badResumptionToken
+
+=item 
+
+badVerb
+
+=item 
+
+cannotDisseminateFormat
+
+=item 
+
+idDoesNotExist
+
+=item 
+
+noRecordsMatch
+
+=item 
+
+noMetadataFormats
+
+=item 
+
+noSetHierarchy
+
+=item 
+
+xmlParseError
+
+=back
+
+For more information about these error codes see:
+L<http://www.openarchives.org/OAI/openarchivesprotocol.html#ErrorConditions>.
 
 =cut
 

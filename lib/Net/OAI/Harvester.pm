@@ -21,7 +21,7 @@ use Net::OAI::ListSets;
 use Net::OAI::Record::Header;
 use Net::OAI::Record::OAI_DC;
 
-our $VERSION = 0.75;
+our $VERSION = 0.8;
 
 
 =head1 NAME
@@ -126,21 +126,24 @@ to contribute back into the Net::OAI::Harvester project please get in touch!
 
 =head1 METHODS
 
-All the Net::OAI::Harvester methods return other objects. As you would expect new() 
-returns an Net::OAI::Harvester object; similarly getRecord() returns an Net::OAI::Record 
-object, listIdentifiers() returns a Net::OAI::ListIdentifiers object, identify()
-returns an Net::OAI::Identify object, and so on. So when you use one of these
-methods you'll probably want to check out the docs for the object that gets returned so you can see what to do with it.
+All the Net::OAI::Harvester methods return other objects. As you would expect 
+new() returns an Net::OAI::Harvester object; similarly getRecord() returns an 
+Net::OAI::Record object, listIdentifiers() returns a Net::OAI::ListIdentifiers 
+object, identify() returns an Net::OAI::Identify object, and so on. So when 
+you use one of these methods you'll probably want to check out the docs for 
+the object that gets returned so you can see what to do with it. Many 
+of these classes inherit from Net::OAI::Base which provides some base 
+functionality for retrieving errors, etc.
 
 =head2 new()
 
 The constructor which returns an Net::OAI::Harvester object. You must supply the
-baseURL parameter, to tell Net::OAI::Harvester what data repository you are going 
-to be harvesting. For a list of data providers check out the directory 
+baseURL parameter, to tell Net::OAI::Harvester what data repository you are 
+going to be harvesting. For a list of data providers check out the directory 
 available on the Open Archives Initiative homepage.  
 
     my $harvester = Net::OAI::Harvester->new(
-	baseURL => ''http://memory.loc.gov/cgi-bin/oai2_0'
+	baseURL => 'http://memory.loc.gov/cgi-bin/oai2_0'
     );
 
 =cut
@@ -158,6 +161,7 @@ sub new {
     my $self = bless( 
 	{
 	    baseURL	    => $baseURL,
+	    debug	    => 0
 	}, ref( $class ) || $class );
 
     ## set the user agent
@@ -199,10 +203,7 @@ sub identify {
     my $error = Net::OAI::Error->new( Handler => $token );
     my $parser = XML::SAX::ParserFactory->parser( Handler => $error );
     eval { $parser->parse_uri( $identity->file() ) };
-    if ( $@ ) {  
-	$error->errorString( "XML parsing error: $@" );
-	$error->errorCode( -1 );
-    }
+    if ( $@ ) { _xmlError( $error ); } 
     $identity->{ token } = $token->token() ? $token : undef;
     $identity->{ error } = $error;
     return( $identity );
@@ -242,10 +243,7 @@ sub listMetadataFormats {
     my $error = Net::OAI::Error->new( Handler => $token );
     my $parser = XML::SAX::ParserFactory->parser( Handler => $error );
     eval{ $parser->parse_uri( $list->file() ) };
-    if ( $@ ) {  
-	$error->errorString( "XML parsing error: $@" );
-	$error->errorCode( -1 );
-    }
+    if ( $@ ) { _xmlError( $error ); } 
     $list->{ token } = $token->token() ? $token : undef;
     $list->{ error } = $error;
     return( $list );
@@ -299,10 +297,7 @@ sub getRecord {
     my $error = Net::OAI::Error->new( Handler => $header );
     my $parser = XML::SAX::ParserFactory->parser( Handler => $error );
     $parser->parse_uri( $record->file() );
-    if ( $@ ) {  
-	$error->errorString( "XML parsing error: $@" );
-	$error->errorCode( -1 );
-    }
+    if ( $@ ) { _xmlError( $error ); } 
     $record->{ error } = $error;
     $record->{ metadata } = $metadataHandler;
     $record->{ header } = $header;
@@ -376,10 +371,7 @@ sub listRecords {
     my $error = Net::OAI::Error->new( Handler => $token );
     my $parser = XML::SAX::ParserFactory->parser( Handler => $error );
     eval { $parser->parse_uri( $list->file() ) };
-    if ( $@ ) {  
-	$error->errorString( "XML parsing error: $@" );
-	$error->errorCode( -1 );
-    }
+    if ( $@ ) { _xmlError( $error ); } 
     $list->{ error } = $error;
     $list->{ token } = $token->token() ? $token : undef;
     return( $list );
@@ -425,10 +417,7 @@ sub listIdentifiers {
     my $error = Net::OAI::Error->new( Handler => $token );
     my $parser = XML::SAX::ParserFactory->parser( Handler => $error );
     eval { $parser->parse_uri( $list->file() ) };
-    if ( $@ ) {  
-	$error->errorString( "XML parsing error: $@" );
-	$error->errorCode( -1 );
-    }
+    if ( $@ ) { _xmlError( $error ); } 
     $list->{ token } = $token->token() ? $token : undef; 
     $list->{ error } = $error;
     return( $list );
@@ -461,10 +450,7 @@ sub listSets {
     my $error = Net::OAI::Error->new( Handler => $token );
     my $parser = XML::SAX::ParserFactory->parser( Handler => $error );
     eval{ $parser->parse_uri( $list->file() ) };
-    if ( $@ ) {  
-	$error->errorString( "XML parsing error: $@" );
-	$error->errorCode( -1 );
-    }
+    if ( $@ ) { _xmlError( $error ); } 
     $list->{ error } = $error;
     $list->{ token } = $token->token() ? $token : undef;
     return( $list );
@@ -506,6 +492,24 @@ sub userAgent {
     return( $self->{ userAgent } );
 }
 
+=head2 debug() 
+
+If you would like to start or stop receiving diagnostic information on 
+STDERR pass in a true or false value.
+
+    ## turn on debugging
+    $harvester->debug( 1 );  
+
+    ## turn off debugging
+    $harvester->debug( 0 );
+
+=cut
+
+sub debug { 
+    my ( $self, $arg ) = @_;
+    $self->{ debug } = $arg ? 1 : 0;
+}
+
 ## internal stuff
 
 sub _get {
@@ -513,6 +517,7 @@ sub _get {
     my $ua = $self->{ userAgent };
     my ( $fh, $file ) = tempfile();
     binmode( $fh, ':utf8' );
+    $self->_debug( "fetching ".$uri->as_string() );
     my $request = HTTP::Request->new( GET => $uri->as_string() );
     my $response = $ua->request( $request, sub { print $fh shift; }, 4096 );
     close( $fh );
@@ -531,6 +536,20 @@ sub _get {
 	    errorString	    => ''
     );
 
+}
+
+sub _xmlError {
+    my $e = shift;
+    $e->errorString( "XML parsing error: $@" );
+    $e->errorCode( 'xmlParseError' );
+}
+
+
+sub _debug {
+    my ( $self, $msg ) = @_;
+    if ( $self->{ debug } ) { 
+	print STDERR localtime().": $msg\n";
+    }
 }
 
 =head1 TODO

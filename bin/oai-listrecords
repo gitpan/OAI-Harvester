@@ -29,7 +29,7 @@ use Getopt::Long;
 use Net::OAI::Harvester;
 use Pod::Usage;
 
-my ( $url, $metadataPrefix, $from, $until, $set ); 
+my ( $url, $metadataPrefix, $from, $until, $set, $debug ); 
 
 GetOptions(
     'baseURL:s'		=> \$url,
@@ -37,6 +37,7 @@ GetOptions(
     'from:s'		=> \$from,
     'until:s'		=> \$until,
     'set:s'		=> \$set,
+    'debug!'		=> \$debug,
 );
 
 if ( !$metadataPrefix ) { 
@@ -49,6 +50,8 @@ if ( !$url or !$metadataPrefix ) {
 }
 
 my $harvester = Net::OAI::Harvester->new( baseURL => $url );
+$harvester->debug( $debug );
+
 my %opts = ( 'metadataPrefix'	=> $metadataPrefix );
 $opts{ 'from' } = $from if $from;
 $opts{ 'until' } = $until if $until;
@@ -61,6 +64,12 @@ while ( ! $finished ) {
 
     if ( $records->errorCode() ) { 
 	print STDERR $records->errorString(); 
+	## if bad xml print out the response
+	if ( $records->errorCode() eq 'xmlParseError' ) { 
+	    open( FILE, $records->file() );
+	    print while ( <FILE> );
+	    close( FILE );
+	}
 	exit(1);
     }
 
