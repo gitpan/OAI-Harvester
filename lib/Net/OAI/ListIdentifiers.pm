@@ -5,6 +5,7 @@ use base qw( XML::SAX::Base );
 use base qw( Net::OAI::Base );
 use Net::OAI::Record::Header;
 use File::Temp qw( tempfile );
+use IO::File;
 use YAML;
 
 =head1 NAME
@@ -46,7 +47,7 @@ sub next {
     }
 
     local $/ = "__END_OF_RECORD__\n";
-    my $data = $self->{ headerFileHandle }->getline();
+    my $data = $self->{ headerFileHandle }->getline() || '';
     chomp( $data );
 
     if ( ! defined($data) ) {

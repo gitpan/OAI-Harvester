@@ -40,7 +40,6 @@ Net::OAI::Record::OAI_DC -
 sub new {
     my ( $class, %opts ) = @_;
     my $self = bless \%opts, ref( $class ) || $class;
-    $self->{ insideTag } = undef;
     foreach ( @OAI_DC_ELEMENTS ) { $self->{ $_ } = []; }
     return( $self );
 }
@@ -112,20 +111,18 @@ sub start_element {
 	$self->{ insideMetadata } = 1;
     }
     $self->{ chars } = '';
-    $self->{ insideTag } = $element->{ Name };
 }
 
 sub end_element {
     my ( $self, $element ) = @_;
-    my $element = $self->{ insideTag };
-    $element =~ s/.*://; # strip namespace to get bare element
-    if ( $element eq 'metadata' ) { 
+    ## strip namespace from element name
+    my ( $elementName ) = ( $element->{ Name } =~ /^(?:.*:)?(.*)$/ );
+    if ( $elementName eq 'metadata' ) { 
 	$self->{ insideMetadata } = undef; 
     }
     if ( $self->{ insideMetadata } ) { 
-	push( @{ $self->{ $element } }, $self->{ chars } );
+	push( @{ $self->{ $elementName } }, $self->{ chars } );
     }
-    $self->{ insideTag } = undef;
 }
 
 sub characters {

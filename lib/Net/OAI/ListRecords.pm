@@ -8,6 +8,7 @@ use Net::OAI::Record::Header;
 use Net::OAI::Record::OAI_DC;
 use File::Temp qw( tempfile );
 use YAML;
+use IO::File;
 
 $YAML::DumpCode = 0;
 
@@ -50,7 +51,7 @@ sub next {
     }
 
     local $/ = "__END_OF_RECORD__\n";
-    my $data = $self->{ recordsFileHandle }->getline();
+    my $data = $self->{ recordsFileHandle }->getline() || '';
     chomp( $data );
 
     if ( ! defined( $data ) ) {
@@ -88,7 +89,7 @@ sub end_element {
 	    metadata	=> $metadata,
 	);
 	$self->{ recordsFileHandle }->print( 
-	    Store( $record ),"\n",
+	    Dump( $record ),"\n",
 	    "__END_OF_RECORD__\n"
 	);
     } 
