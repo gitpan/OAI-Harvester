@@ -5,7 +5,7 @@ use warnings;
 
 use URI;
 use LWP::UserAgent;
-use XML::SAX::ParserFactory;
+use XML::SAX qw( Namespaces Validation );
 use File::Temp qw( tempfile );
 use Carp qw( croak );
 
@@ -21,7 +21,7 @@ use Net::OAI::ListSets;
 use Net::OAI::Record::Header;
 use Net::OAI::Record::OAI_DC;
 
-our $VERSION = 0.82;
+our $VERSION = 0.85;
 
 
 =head1 NAME
@@ -201,7 +201,7 @@ sub identify {
     my $identity = Net::OAI::Identify->new( $self->_get( $uri ) );
     my $token = Net::OAI::ResumptionToken->new( Handler => $identity );
     my $error = Net::OAI::Error->new( Handler => $token );
-    my $parser = XML::SAX::ParserFactory->parser( Handler => $error );
+    my $parser = _parser( $error ); 
     eval { $parser->parse_uri( $identity->file() ) };
     if ( $@ ) { _xmlError( $error ); } 
     $identity->{ token } = $token->token() ? $token : undef;
@@ -241,7 +241,7 @@ sub listMetadataFormats {
     my $list = Net::OAI::ListMetadataFormats->new( $self->_get( $uri ) );
     my $token = Net::OAI::ResumptionToken->new( Handler => $list );
     my $error = Net::OAI::Error->new( Handler => $token );
-    my $parser = XML::SAX::ParserFactory->parser( Handler => $error );
+    my $parser = _parser( $error );
     eval{ $parser->parse_uri( $list->file() ) };
     if ( $@ ) { _xmlError( $error ); } 
     $list->{ token } = $token->token() ? $token : undef;
@@ -295,7 +295,7 @@ sub getRecord {
 	|| Net::OAI::Record::OAI_DC->new();
     my $header = Net::OAI::Record::Header->new( Handler => $metadataHandler );
     my $error = Net::OAI::Error->new( Handler => $header );
-    my $parser = XML::SAX::ParserFactory->parser( Handler => $error );
+    my $parser = _parser( $error ); 
     $parser->parse_uri( $record->file() );
     if ( $@ ) { _xmlError( $error ); } 
     $record->{ error } = $error;
@@ -368,7 +368,7 @@ sub listRecords {
     my $list = Net::OAI::ListRecords->new( $self->_get( $uri ) );
     my $token = Net::OAI::ResumptionToken->new( Handler => $list );
     my $error = Net::OAI::Error->new( Handler => $token );
-    my $parser = XML::SAX::ParserFactory->parser( Handler => $error );
+    my $parser = _parser( $error ); 
     eval { $parser->parse_uri( $list->file() ) };
     if ( $@ ) { _xmlError( $error ); } 
     $list->{ error } = $error;
@@ -413,7 +413,7 @@ sub listIdentifiers {
     my $list = Net::OAI::ListIdentifiers->new( $self->_get( $uri ) );
     my $token = Net::OAI::ResumptionToken->new( Handler => $list );
     my $error = Net::OAI::Error->new( Handler => $token );
-    my $parser = XML::SAX::ParserFactory->parser( Handler => $error );
+    my $parser = _parser( $error );
     eval { $parser->parse_uri( $list->file() ) };
     if ( $@ ) { _xmlError( $error ); } 
     $list->{ token } = $token->token() ? $token : undef; 
@@ -446,7 +446,7 @@ sub listSets {
     my $list = Net::OAI::ListSets->new( $self->_get( $uri ) );
     my $token = Net::OAI::ResumptionToken->new( Handler => $list );
     my $error = Net::OAI::Error->new( Handler => $token );
-    my $parser = XML::SAX::ParserFactory->parser( Handler => $error );
+    my $parser = _parser( $error );
     eval{ $parser->parse_uri( $list->file() ) };
     if ( $@ ) { _xmlError( $error ); } 
     $list->{ error } = $error;
@@ -536,6 +536,12 @@ sub _get {
 
 }
 
+sub _parser {
+    my $handler = shift;
+    my $factory = XML::SAX::ParserFactory->new();
+    return( $factory->parser( Handler => $handler ) );
+}
+
 sub _xmlError {
     my $e = shift;
     $e->errorString( "XML parsing error: $@" );
@@ -549,6 +555,18 @@ sub _debug {
 	print STDERR localtime().": $msg\n";
     }
 }
+
+=head1 PERFORMANCE 
+
+XML::SAX is used for parsing, but it presents a generalized interface to many 
+parsers. It comes with XML::Parser::PurePerl by default, which is nice since
+you don't have to worry about getting the right libraries installed. However
+XML::Parser::PurePerl is rather slow compared to XML::LibXML. If you 
+are a speed freak install XML::LibXML from CPAN today.
+
+If you have a particular parser you want to use you can set the
+$XML::SAX::ParserPackage variable appropriately. See XML::SAX::ParserFactory
+documentation for details.
 
 =head1 TODO
 

@@ -33,6 +33,17 @@ Net::OAI::Record::OAI_DC -
 
 =head1 METHODS
 
+The accessor methods are aware of their calling context (list,scalar) and
+will respond appropriately. For example an item may have multiple creators,
+so a call to creator() in a scalar context returns only the first creator;
+and in a list context all creators are returned.
+
+    # scalar context
+    my $creator = $metadata->creator();
+    
+    # list context
+    my @creators = $metadata->creator();
+
 =head2 new()
 
 =cut

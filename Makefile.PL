@@ -20,6 +20,34 @@ WriteMakefile(
 			   ],
 );
 
+## if they don't have XML::LibXML tell them they might want to get it
+## for performance boost.
+
+eval( 'use XML::SAX' );
+if ( !$@ ) { 
+    my $found = 0;
+    foreach my $parser ( @{ XML::SAX->parsers() } ) { 
+	$found = 1 if ( $parser->{ Name } eq 'XML::LibXML::SAX' );
+    }
+    if ( !$found ) { 
+
+	print 
+
+<<MESSAGE;
+
+Note: It looks like you don't have XML::LibXML installed. This is ok 
+since we have XML::SAX::PurePerl to fall back to. You might want to 
+consider installing XML::LibXML if you want to boost Net::OAI::Harvester's
+performance.
+
+MESSAGE
+
+    }
+}
+
+
+## a general message about needing to be connected to the net for tests
+
 print 
 
 <<MESSAGE;

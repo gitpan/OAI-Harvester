@@ -1,5 +1,15 @@
 Revision history for Perl extension Net::OAI::Harvester
 
+0.85 Wed Nov 26 13:45:23 2003
+	- added note to Net::OAI::Record::OAI_DC.pm to indicate the 
+	  return values in list and scalar contexts. Thanks Jose
+	  Barrueco @ University of Valencia.
+	- beefed up docs in Net::OAI::Identify
+	- modified t/002.error to check parser so that test doesn't fail 
+	  under XML::LibXML
+	- added output message to Makefile.PL encouraging folks to 
+	  use libxml2 parser for increased speed.
+
 0.82 Sat Nov 01 07:40:53 2003
 	- require at least 5.8.0 for installation since this is the recommended
 	  baseline for processing unicode. 

@@ -35,30 +35,67 @@ sub new {
     return( $self );
 }
 
+=head1 repositoryName() 
+
+Returns the name of the repostiory.
+
+=cut
+
 sub repositoryName {
     my $self = shift;
     return( $self->{ repositoryName } );
 }
+
+=head1 baseURL()
+
+Returns the base URL used by the repository.
+
+=cut
 
 sub baseURL {
     my $self = shift;
     return( $self->{ baseURL } );
 }
 
+=head1 protocolVersion()
+
+Returns the version of the OAI-PMH used by the repository.
+
+=cut
+
 sub protocolVersion {
     my $self = shift;
     return( $self->{ protocolVersion } );
 }
+
+=head1 earliestDatestamp()
+
+Returns the earlies datestamp for records available in the repository.
+
+=cut
 
 sub earliestDatestamp {
     my $self = shift;
     return( $self->{ earliestDatestamp } );
 }
 
+=head1 deletedRecord()
+
+Indicates the way the repository works with deleted records. Should
+return I<no>, I<transient> or I<persistent>.
+
+=cut
+
 sub deletedRecord {
     my $self = shift;
     return( $self->{ deletedRecord } );
 }
+
+=head1 granularity()
+
+Returns the granularity used by the repository.
+
+=cut
 
 sub granularity {
     my $self = shift;
