@@ -21,7 +21,7 @@ use Net::OAI::ListSets;
 use Net::OAI::Record::Header;
 use Net::OAI::Record::OAI_DC;
 
-our $VERSION = 0.97;
+our $VERSION = 0.98;
 our $DEBUG = 0;
 
 =head1 NAME
@@ -597,8 +597,8 @@ sub _get {
     my ($self,$uri) = @_;
     my $ua = $self->{ userAgent };
     my ( $fh, $file ) = tempfile();
-    binmode( $fh, ':utf8' );
     debug( "fetching ".$uri->as_string() );
+    debug( "writing to tmp file: $file" );
     my $request = HTTP::Request->new( GET => $uri->as_string() );
     my $response = $ua->request( $request, sub { print $fh shift; }, 4096 );
     close( $fh );

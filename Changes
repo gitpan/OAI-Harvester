@@ -1,5 +1,8 @@
 Revision history for Perl extension Net::OAI::Harvester
 
+0.98    Fri Nov 19 09:41:32 CST 2004
+        - docfix thanks Brian Cassidy
+
 0.97    Tue Aug 30 21:07:05 2004
         - deprecated Net::OAI::Haverster::debug() in favor of setting
           Net::OAI::Harvester::DEBUG. This allows for other packages

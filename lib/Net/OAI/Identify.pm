@@ -6,7 +6,7 @@ use base qw( Net::OAI::Base );
 
 =head1 NAME
 
-Net::OAI::Indentify - Results of the Indentify OAI-PMH verb. 
+Net::OAI::Identify - Results of the Identify OAI-PMH verb. 
 
 =head1 SYNOPSIS
 
