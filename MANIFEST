@@ -27,6 +27,7 @@ t/030.listidentifiers.t
 t/040.getrecord.t
 t/050.listrecords.t
 t/060.listsets.t
+t/MyHandler.pm
 bin/oai-listsets
 bin/oai-listrecords
 META.yml

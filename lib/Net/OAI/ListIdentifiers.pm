@@ -6,7 +6,7 @@ use base qw( Net::OAI::Base );
 use Net::OAI::Record::Header;
 use File::Temp qw( tempfile );
 use IO::File;
-use YAML;
+use Storable qw( store_fd fd_retrieve );
 
 =head1 NAME
 
@@ -30,6 +30,9 @@ sub new {
     my ($fh,$filename) = tempfile();
     $self->{ headerFileHandle } = $fh;
     $self->{ headerFilename } = $filename;
+    ## so we can store code refs
+    $Storable::Deparse = 1;
+    $Storable::Eval = 1;
     return( $self );
 }
 
@@ -46,16 +49,12 @@ sub next {
 	    || die "unable to open temp file: ".$self->{ headerFilename };
     }
 
-    local $/ = "__END_OF_RECORD__\n";
-    my $data = $self->{ headerFileHandle }->getline() || '';
-    chomp( $data );
-
-    if ( ! defined($data) ) {
+    if ( $self->{ headerFileHandle }->eof() ) {
 	$self->{ headerFileHandle }->close();
 	return( undef );
     }
 
-    my $header = Load( $data );
+    my $header = fd_retrieve( $self->{ headerFileHandle } );
     return( $header );
 }
 
@@ -75,8 +74,7 @@ sub end_element {
     $self->SUPER::end_element( $element );
     if ( $element->{ Name } eq 'header' ) {
 	my $header = $self->get_handler();
-	$self->{ headerFileHandle }->print( Dump($header), 
-	    "\n__END_OF_RECORD__\n" );
+	store_fd( $header, $self->{ headerFileHandle } );
 	$self->set_handler( $self->{ OLD_Handler } );
     } elsif ( $element->{ Name } eq 'ListIdentifiers' ) {
 	$self->{ headerFileHandle }->close();

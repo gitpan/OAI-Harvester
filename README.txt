@@ -22,7 +22,7 @@ are a few dependencies.
 LWP::UserAgent - for HTTP 
 XML::SAX - for XML parsing
 URI - for url representation
-YAML - for object serialization
+Storable - for object serialization
 
 You also probably should be using Perl 5.8.0 at least since many repositories 
 contain UTF8 data.

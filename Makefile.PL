@@ -12,7 +12,7 @@ WriteMakefile(
 			    'LWP::UserAgent'	=> 0,
 			    'XML::SAX'		=> 0,
 			    'URI'		=> 0,
-			    'YAML'		=> 0,
+			    'Storable'		=> 0,
 			    },
     EXE_FILES		=> [ 
 			    'bin/oai-listsets',

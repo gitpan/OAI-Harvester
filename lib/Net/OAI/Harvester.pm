@@ -21,7 +21,7 @@ use Net::OAI::ListSets;
 use Net::OAI::Record::Header;
 use Net::OAI::Record::OAI_DC;
 
-our $VERSION = 0.86;
+our $VERSION = 0.9;
 
 
 =head1 NAME
@@ -106,10 +106,11 @@ Net::OAI::Harvester has a few features that are worth mentioning:
 
 Since the OAI-PMH results can be arbitrarily large, a stream based (XML::SAX) 
 parser is used. As the document is parsed corresponding Perl objects are 
-created (records, headers, etc), which are then serialized on disk (as YAML if 
-you are curious). The serialized objects on disk can then be iterated over one at a time. The benefit of this is a lower memory footprint when (for 
-example) a ListRecords verb is exercised on a repository that returns 100,000 
-records.
+created (records, headers, etc), which are then serialized on disk (using 
+Storable if you are curious). The serialized objects on disk can then be 
+iterated over one at a time. The benefit of this is a lower memory footprint 
+when (for example) a ListRecords verb is exercised on a repository that 
+returns 100,000 records.
 
 =item 2
 
@@ -269,10 +270,10 @@ XML::Handler for another type of metadata use the C<metadataHandler> parameter.
     my $metadata = $record->metadata();
 
     ## or if you would rather use your own XML::Handler 
-    my $handler = MyHandler->new();
+    ## pass in the package name for the object you would like to create
     my $record = $harvester->getRecord(
 	identifier		=> 'abc123',
-	metadataHandler		=> $handler
+	metadataHandler		=> 'MyHandler'	    
     );
     my $metadata = $record->metadata();
     
@@ -280,28 +281,40 @@ XML::Handler for another type of metadata use the C<metadataHandler> parameter.
 
 sub getRecord {
     my ( $self, %opts ) = @_;
+
     croak( "you must pass the identifier parameter to getRecord()" )
 	if ( ! exists( $opts{ 'identifier' } ) );
     croak( "you must pass the metadataPrefix parameter to getRecord()" )
 	if ( ! exists( $opts{ 'metadataPrefix' } ) );
+
+    my $metadataHandler;
+    if ( exists( $opts{ metadataHandler } ) ) {  
+	my $package = $opts{ metadataHandler };
+	_verifyMetadataHandler( $package );
+	$metadataHandler = $package->new();
+    } else {
+	$metadataHandler = Net::OAI::Record::OAI_DC->new();
+    }
+
     my $uri = $self->{ baseURL };
     $uri->query_form(
 	verb		=> 'GetRecord',
 	identifier	=> $opts{ 'identifier' },
 	metadataPrefix	=> $opts{ 'metadataPrefix' }
     );
+
     my $record = Net::OAI::GetRecord->new( $self->_get( $uri ) );
-    my $metadataHandler = $opts{ metadataHandler } 
-	|| Net::OAI::Record::OAI_DC->new();
     my $header = Net::OAI::Record::Header->new( Handler => $metadataHandler );
     my $error = Net::OAI::Error->new( Handler => $header );
     my $parser = _parser( $error ); 
     $parser->parse_uri( $record->file() );
     if ( $@ ) { _xmlError( $error ); } 
+
     $record->{ error } = $error;
     $record->{ metadata } = $metadataHandler;
     $record->{ header } = $header;
     return( $record );
+
 }
 
 
@@ -322,6 +335,19 @@ OAI-PMH spec.
     while ( my $record = $records->next() ) { 
 	my $metadata = $record->metadata();
 	...
+    }
+
+If you would like to use your own metadata handler then you can specify 
+the package name of the handler. 
+
+    my $records = $harvester->listRecords(
+	metadataPrefix	=> 'mods',
+	metadataHandler	=> 'MODS::Handler'
+    );
+
+    while ( my $record = $records->next() ) { 
+	my $metadata = $record->metadata();
+	# $metadata will be a MODS::Handler object
     }
 
 You must handle resumption tokens yourself, but it is fairly easy to do with a 
@@ -352,12 +378,14 @@ loop, and the resumptionToken() method.
 
 sub listRecords {
     my ( $self, %opts ) = @_;
+
     croak( "you must pass the metadataPrefix parameter to listRecords()" )
 	if ( ! exists( $opts{ 'metadataPrefix' } )
 	    and ! exists( $opts{ 'resumptionToken' } ) );
     my %pairs = ( 
 	verb		  => 'ListRecords', 
     );
+
     foreach ( qw( metadataPrefix from until set resumptionToken ) ) {
 	if ( exists( $opts{ $_ } ) ) {
 	    $pairs{ $_ } = $opts{ $_ };
@@ -365,12 +393,16 @@ sub listRecords {
     }
     my $uri = $self->{ baseURL };
     $uri->query_form( %pairs );
-    my $list = Net::OAI::ListRecords->new( $self->_get( $uri ) );
+
+    my $list = Net::OAI::ListRecords->new( $self->_get( $uri ), 
+	metadataHandler => $opts{ metadataHandler } );
+
     my $token = Net::OAI::ResumptionToken->new( Handler => $list );
     my $error = Net::OAI::Error->new( Handler => $token );
     my $parser = _parser( $error ); 
     eval { $parser->parse_uri( $list->file() ) };
     if ( $@ ) { _xmlError( $error ); } 
+
     $list->{ error } = $error;
     $list->{ token } = $token->token() ? $token : undef;
     return( $list );
@@ -549,12 +581,30 @@ sub _xmlError {
 }
 
 
+sub _verifyMetadataHandler {
+    my $package = shift;
+    eval( "use $package" );
+    _fatal( "unable to locate metadataHandler $package in: " . 
+	join( "\n\t", @INC ) ) if $@; 
+    _fatal( "metadataHandler $package must inherit from XML::SAX::Base\n" )
+	if ( ! grep { 'XML::SAX::Base' } eval( '@' . $package . '::ISA' ) );
+    return( 1 );
+}
+
+
 sub _debug {
     my ( $self, $msg ) = @_;
     if ( $self->{ debug } ) { 
 	print STDERR localtime().": $msg\n";
     }
 }
+
+sub _fatal {
+    my $msg = shift;
+    print STDERR "fatal: $msg\n\n";
+    exit( 1 );
+}
+
 
 =head1 PERFORMANCE 
 
@@ -655,6 +705,10 @@ L<Net::OAI::Record::Metadata>
 =item *
 
 L<Net::OAI::ResumptionToken>
+
+=item *
+
+L<Storable>
 
 =back
 

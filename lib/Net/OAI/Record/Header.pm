@@ -5,7 +5,7 @@ use base qw( XML::SAX::Base );
 
 =head1 NAME
 
-Net::OAI::Record::Header - 
+Net::OAI::Record::Header - class for record header representation
 
 =head1 SYNOPSIS
 

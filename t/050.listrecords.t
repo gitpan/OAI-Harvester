@@ -44,3 +44,21 @@ ok( ! $@, 'completeListSize()' );
 eval { $r->cursor() };
 ok( ! $@, 'cursor()' );
 
+use lib qw( t ); ## so harvester will be able to locate our handler
+
+$l = $h->listRecords( 
+    metadataPrefix  => 'oai_dc', 
+    metadataHandler => 'MyHandler',
+    set		    => 'papr' 
+);
+
+isa_ok( $l, 'Net::OAI::ListRecords', 'listRecords() with metadataHandler' );
+
+while ( my $r = $l->next() ) {
+    isa_ok( $r, 'Net::OAI::Record' );
+    my $header = $r->header();
+    isa_ok( $header, 'Net::OAI::Record::Header' );
+    my $metadata = $r->metadata();
+    isa_ok( $metadata, 'MyHandler' );
+}
+

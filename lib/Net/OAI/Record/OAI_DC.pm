@@ -25,7 +25,7 @@ our $AUTOLOAD;
 
 =head1 NAME
 
-Net::OAI::Record::OAI_DC - 
+Net::OAI::Record::OAI_DC - class for baseline Dublin Core support
 
 =head1 SYNOPSIS
 

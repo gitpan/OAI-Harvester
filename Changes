@@ -1,9 +1,19 @@
 Revision history for Perl extension Net::OAI::Harvester
 
-0.86 Wed Nov 26 14:01:21 2003
+0.9	Sun Dec 07 08:45:28 2003 
+	- Net::OAI::ListRecords now uses Storable rather than YAML since
+	  YAML cannot handle utf8 at this time. Also Storable is
+	  significantly faster.
+	- Modified listRecords() to accept metadataHandler parameter for
+	  specifying a custom metadata SAX handler.
+	- Brought getRecord() into synch with listRecords() so that
+	  metadataHandler specifies the package name of the custom metadata 
+	  handler, rather than an actual instance of that class. 
+
+0.86	Wed Nov 26 14:01:21 2003
 	- fixed 5/002.error to not skip ALL THE TIME!
 
-0.85 Wed Nov 26 13:45:23 2003
+0.85	Wed Nov 26 13:45:23 2003
 	- added note to Net::OAI::Record::OAI_DC.pm to indicate the 
 	  return values in list and scalar contexts. Thanks Jose
 	  Barrueco @ University of Valencia.
@@ -13,24 +23,24 @@ Revision history for Perl extension Net::OAI::Harvester
 	- added output message to Makefile.PL encouraging folks to 
 	  use libxml2 parser for increased speed.
 
-0.82 Sat Nov 01 07:40:53 2003
+0.82	Sat Nov 01 07:40:53 2003
 	- require at least 5.8.0 for installation since this is the recommended
 	  baseline for processing unicode. 
 
-0.81 Fri Oct 24 01:51:03 2003
+0.81	Fri Oct 24 01:51:03 2003
 	- fixed passing of empty metadataFormat name/value pair when 
 	  listRecords() and listIdentifiers() use a resumption token.
 	  Thanks Patrick Hochstenbach @ LANL.
 
-0.8  Fri Oct 24 09:16:12 2003
+0.8	Fri Oct 24 09:16:12 2003
 	- better catching of XML errors
 	- added debug() method
 	- added --debug switch to oai-listrecords
 
-0.75 Wed Oct 22 21:51:08 2003
+0.75	Wed Oct 22 21:51:08 2003
 	- wrapped XML parsing in eval block to trap fatal errors.
 
-0.7  Wed Oct 22 09:58:55 2003
+0.7	Wed Oct 22 09:58:55 2003
 	- more doc fixes (thanks Martin)
 	- resumptionToken() now returns undef when no resumption token 
 	  was present in the response.
@@ -38,29 +48,28 @@ Revision history for Perl extension Net::OAI::Harvester
 	  convention of resumptionToken().
 	- fixed custom userAgent getting/setting (thanks Martin). 
 
-0.6  Tue Oct 21 17:12:31 2003
+0.6	Tue Oct 21 17:12:31 2003
 	- fixed several doc errors (thanks Martin Emmerich)
 	- modified list verbs to work with resumption tokens
 	- modified oai-listrecords utility to automatically fetch all 
 	  records using resumption tokens.
 
-0.5  Wed Aug 28 16:57:03 2003
+0.5	Wed Aug 28 16:57:03 2003
 	- more doc fixes
 
-0.4  Thu Aug 07 17:22:12 2003
+0.4	Thu Aug 07 17:22:12 2003
 	- fixed doc error (thanks Tajoli Zeno)
 	- fixed warnings that run under new Test::Harness.
 	- explicitly use IO::File
 
-0.3  Mon Jul 28 11:35:37 2003
+0.3	Mon Jul 28 11:35:37 2003
 	- added asString() method to Net::OAI::Record::OAI_DC
 	- added oai-listrecords utility
 	- modified Makefile.PL to put oai-listsets and oai-listrecords in bin
 
-0.2  Tue Jul 08 09:59:34 2003
+0.2	Tue Jul 08 09:59:34 2003
 	- updated docs
 
-0.1  Thu May 15 22:37:02 2003
-	- original version; created by h2xs 1.20 with options
-		-X -P OAI.pm
+0.1	Thu May 15 22:37:02 2003
+	- original version
 
