@@ -17,6 +17,7 @@ lib/Net/OAI/ResumptionToken.pm
 lib/Net/OAI/Record/Header.pm
 lib/Net/OAI/Record/OAI_DC.pm
 t/000.harvester.t
+t/001.ua.t
 t/005.header.t
 t/006.resumption.t
 t/010.identify.t
@@ -27,4 +28,4 @@ t/050.listrecords.t
 t/060.listsets.t
 bin/oai-listsets
 bin/oai-listrecords
-META.yml                                 Module meta-data (added by MakeMaker)
+META.yml

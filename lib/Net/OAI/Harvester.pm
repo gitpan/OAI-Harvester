@@ -21,7 +21,7 @@ use Net::OAI::ListSets;
 use Net::OAI::Record::Header;
 use Net::OAI::Record::OAI_DC;
 
-our $VERSION = 0.6;
+our $VERSION = 0.7;
 
 
 =head1 NAME
@@ -161,7 +161,7 @@ sub new {
 	}, ref( $class ) || $class );
 
     ## set the user agent
-    if ( $normalOpts{ userAgent } ) { 
+    if ( $normalOpts{ USERAGENT } ) { 
 	$self->userAgent( $normalOpts{ USERAGENT } ); 
     } else {
 	my $ua = LWP::UserAgent->new();
@@ -199,7 +199,7 @@ sub identify {
     my $error = Net::OAI::Error->new( Handler => $token );
     my $parser = XML::SAX::ParserFactory->parser( Handler => $error );
     $parser->parse_uri( $identity->file() );
-    $identity->{ token } = $token;
+    $identity->{ token } = $token->token() ? $token : undef;
     $identity->{ error } = $error;
     return( $identity );
 }
@@ -238,7 +238,7 @@ sub listMetadataFormats {
     my $error = Net::OAI::Error->new( Handler => $token );
     my $parser = XML::SAX::ParserFactory->parser( Handler => $error );
     $parser->parse_uri( $list->file() );
-    $list->{ token } = $token;
+    $list->{ token } = $token->token() ? $token : undef;
     $list->{ error } = $error;
     return( $list );
 }
@@ -320,20 +320,23 @@ OAI-PMH spec.
 You must handle resumption tokens yourself, but it is fairly easy to do with a 
 loop, and the resumptionToken() method.
 
-    my $finished = undef;
-    my %opts = ( metadataPrefix => 'oai_dc' );
+    my $records = $harvester->listRecords( metadataPrefix => 'oai_dc' );
+    my $finished = 0;
 
     while ( ! $finished ) {
 
-	my $records = $harvester->listRecords( %opts );
 	while ( my $record = $records->next() ) {
 	    my $metadata = $record->metadata();
-	    ...
+	    # do interesting stuff here 
 	}
 
 	my $rToken = $records->resumptionToken();
-	if ( $token ) { 
-	    $opts{ resumptionToken } = $rToken->resumptionToken();
+	if ( $rToken ) { 
+	    $records = $harvester->listRecords( 
+		resumptionToken => $rToken->token()
+	    );
+	} else { 
+	    $finished = 1;
 	}
 
     }
@@ -362,7 +365,7 @@ sub listRecords {
     my $parser = XML::SAX::ParserFactory->parser( Handler => $error );
     $parser->parse_uri( $list->file() );
     $list->{ error } = $error;
-    $list->{ token } = $token;
+    $list->{ token } = $token->token() ? $token : undef;
     return( $list );
 }
 
@@ -406,7 +409,7 @@ sub listIdentifiers {
     my $error = Net::OAI::Error->new( Handler => $token );
     my $parser = XML::SAX::ParserFactory->parser( Handler => $error );
     $parser->parse_uri( $list->file() );
-    $list->{ token } = $token;
+    $list->{ token } = $token->token() ? $token : undef; 
     $list->{ error } = $error;
     return( $list );
 }
@@ -439,7 +442,7 @@ sub listSets {
     my $parser = XML::SAX::ParserFactory->parser( Handler => $error );
     $parser->parse_uri( $list->file() );
     $list->{ error } = $error;
-    $list->{ token } = $token;
+    $list->{ token } = $token->token() ? $token : undef;
     return( $list );
 }
 
@@ -531,6 +534,11 @@ Create common handlers for other metadata formats (MARC, qualified DC, etc).
 Selectively load Net::OAI::* classes as needed, rather than getting all of them 
 at once at the beginning of Net::OAI::Harvester.
 
+=item *
+
+Wrap XML parsing, so that we can return nicer errors when the response is
+not valid XML.
+
 =back
 
 =head1 SEE ALSO
@@ -598,6 +606,10 @@ L<Net::OAI::ResumptionToken>
 =item * 
 
 Ed Summers <ehs@pobox.com>
+
+=item *
+
+Martin Emmerich <Martin.Emmerich@oew.de>
 
 =back
 

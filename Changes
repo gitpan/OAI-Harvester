@@ -1,5 +1,13 @@
 Revision history for Perl extension OAI.pm.
 
+0.7  Wed Oct 22 09:58:55 2003
+	- more doc fixes (thanks Martin)
+	- resumptionToken() now returns undef when no resumption token 
+	  was present in the response.
+	- modified bin/oai-listrecords to take advantage of the new return 
+	  convention of resumptionToken().
+	- fixed custom userAgent getting/setting (thanks Martin). 
+
 0.6  Tue Oct 21 17:12:31 2003
 	- fixed several doc errors (thanks Martin Emmerich)
 	- modified list verbs to work with resumption tokens

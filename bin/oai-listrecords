@@ -54,27 +54,31 @@ $opts{ 'from' } = $from if $from;
 $opts{ 'until' } = $until if $until;
 $opts{ 'set' } = $set if $set;
 
-RESUMPTION_TOKEN: {
-
 my $records = $harvester->listRecords( %opts );
+my $finished = 0;
 
-if ( $records->errorCode() ) { 
-    print STDERR $records->errorString(); 
-    exit(1);
-}
+while ( ! $finished ) { 
 
-while ( my $r = $records->next() ) { 
-    print $r->header()->identifier(),"\n";
-    print $r->metadata()->asString(),"\n\n";
-}
+    if ( $records->errorCode() ) { 
+	print STDERR $records->errorString(); 
+	exit(1);
+    }
 
-my $resumptionToken = $records->resumptionToken();
-if ( $resumptionToken->token() ) { 
-    %opts = ();
-    $opts{ resumptionToken } = $resumptionToken->token();
-    print STDERR "using resuption token: ",$resumptionToken->token(),"\n";
-    goto RESUMPTION_TOKEN;
-}
+    while ( my $r = $records->next() ) { 
+	print $r->header()->identifier(),"\n";
+	print $r->metadata()->asString(),"\n\n";
+    }
+
+    my $resumptionToken = $records->resumptionToken();
+    if ( $resumptionToken ) { 
+	$opts{ resumptionToken } = $resumptionToken->token();
+	print STDERR "using resuption token: ",$resumptionToken->token(),"\n";
+	$records = $harvester->listRecords( 
+	    resumptionToken => $resumptionToken->token()
+	);
+    } else { 
+	$finished = 1;
+    }
 
 }
 

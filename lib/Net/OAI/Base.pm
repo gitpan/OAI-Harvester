@@ -86,7 +86,9 @@ sub errorString {
 
 =head2 resumptionToken() 
 
-Returns a Net::OAI::ResumptionToken object associated with the call. 
+Returns a Net::OAI::ResumptionToken object associated with the call. If 
+there was no resumption token returned in the response then you will 
+be returned undef.
 
 =cut
 

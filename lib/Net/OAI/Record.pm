@@ -48,8 +48,6 @@ sub metadata {
 
 =head1 SEE ALSO
 
-=back
-
 =head1 AUTHORS
 
 =over 4 
