@@ -1,6 +1,11 @@
 Revision history for Perl extension OAI.pm.
 
-0.8  Thu Oct 23 09:16:12 2003
+0.81 Fri Oct 24 01:51:03 2003
+	- fixed passing of empty metadataFormat name/value pair when 
+	  listRecords() and listIdentifiers() use a resumption token.
+	  Thanks Patrick Hochstenbach @ LANL.
+
+0.8  Fri Oct 24 09:16:12 2003
 	- better catching of XML errors
 	- added debug() method
 	- added --debug switch to oai-listrecords

@@ -21,7 +21,7 @@ use Net::OAI::ListSets;
 use Net::OAI::Record::Header;
 use Net::OAI::Record::OAI_DC;
 
-our $VERSION = 0.8;
+our $VERSION = 0.81;
 
 
 =head1 NAME
@@ -357,9 +357,8 @@ sub listRecords {
 	    and ! exists( $opts{ 'resumptionToken' } ) );
     my %pairs = ( 
 	verb		  => 'ListRecords', 
-	metadataPrefix    => $opts{ metadataPrefix },
     );
-    foreach ( qw( from until set resumptionToken ) ) {
+    foreach ( qw( metadataPrefix from until set resumptionToken ) ) {
 	if ( exists( $opts{ $_ } ) ) {
 	    $pairs{ $_ } = $opts{ $_ };
 	}
@@ -404,9 +403,8 @@ sub listIdentifiers {
     my $uri = $self->{ baseURL };
     my %pairs = (
 	verb		=> 'ListIdentifiers', 
-	metadataPrefix	=> $opts{  metadataPrefix },
     );
-    foreach ( qw( from until set resumptionToken ) ) {
+    foreach ( qw( metadataPrefix from until set resumptionToken ) ) {
 	if ( exists( $opts{ $_ } ) ) {
 	    $pairs{ $_ } = $opts{ $_ };
 	}

@@ -3,6 +3,7 @@ use ExtUtils::MakeMaker;
 WriteMakefile(
     'NAME'		=> 'OAI-Harvester',
     'DISTNAME'		=> 'OAI-Harvester',
+    'ABSTRACT'		=> 'A package for harvesting metadata using OAI-PMH',
     'VERSION_FROM'	=> 'lib/Net/OAI/Harvester.pm', 
     'PMLIBDIRS'		=> [ qw( lib/ ) ],
     'AUTHOR'		=> 'Ed Summers <ehs@pobox.com>',
