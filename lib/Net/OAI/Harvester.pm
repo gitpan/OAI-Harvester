@@ -21,7 +21,7 @@ use Net::OAI::ListSets;
 use Net::OAI::Record::Header;
 use Net::OAI::Record::OAI_DC;
 
-our $VERSION = 0.5;
+our $VERSION = 0.6;
 
 
 =head1 NAME
@@ -32,7 +32,7 @@ Net::OAI::Harvester - A package for harvesting metadata using OAI-PMH
 
     ## create a harvester for the Library of Congress
     my $harvester = Net::OAI::Harvester->new( 
-	baseURL => ''http://memory.loc.gov/cgi-bin/oai2_0'
+	'baseURL' => 'http://memory.loc.gov/cgi-bin/oai2_0'
     );
 
     ## list all the records in a repository
@@ -318,7 +318,7 @@ OAI-PMH spec.
     }
 
 You must handle resumption tokens yourself, but it is fairly easy to do with a 
-loop, and the token() method.
+loop, and the resumptionToken() method.
 
     my $finished = undef;
     my %opts = ( metadataPrefix => 'oai_dc' );
@@ -331,9 +331,9 @@ loop, and the token() method.
 	    ...
 	}
 
-	my $rToken = $records->token();
+	my $rToken = $records->resumptionToken();
 	if ( $token ) { 
-	    $opts{ resumptionToken } = $rToken->token();
+	    $opts{ resumptionToken } = $rToken->resumptionToken();
 	}
 
     }
@@ -343,7 +343,8 @@ loop, and the token() method.
 sub listRecords {
     my ( $self, %opts ) = @_;
     croak( "you must pass the metadataPrefix parameter to listRecords()" )
-	if ( ! exists( $opts{ 'metadataPrefix' } ) );
+	if ( ! exists( $opts{ 'metadataPrefix' } )
+	    and ! exists( $opts{ 'resumptionToken' } ) );
     my %pairs = ( 
 	verb		  => 'ListRecords', 
 	metadataPrefix    => $opts{ metadataPrefix },
@@ -387,7 +388,8 @@ Net::OAI::ListIdentifiers object.
 sub listIdentifiers {
     my ( $self, %opts ) = @_;
     croak( "listIdentifiers(): metadataPrefix is a required parameter" ) 
-	if ! exists( $opts{ metadataPrefix } );
+	if ( ! exists( $opts{ metadataPrefix } )
+	    and ! exists( $opts{ resumptionToken } ) );
     my $uri = $self->{ baseURL };
     my %pairs = (
 	verb		=> 'ListIdentifiers', 

@@ -8,7 +8,7 @@ Net::OAI::Base - A base class for all OAI-PMH responses
 
 =head1 SYNOPSIS
 
-    if ( $object->token() ) { 
+    if ( $object->resumptionToken() ) { 
 	...
     }
 

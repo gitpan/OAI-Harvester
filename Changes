@@ -1,7 +1,18 @@
 Revision history for Perl extension OAI.pm.
 
+0.6  Tue Oct 21 17:12:31 2003
+	- fixed several doc errors (thanks Martin Emmerich)
+	- modified list verbs to work with resumption tokens
+	- modified oai-listrecords utility to automatically fetch all 
+	  records using resumption tokens.
+
+0.5  Wed Aug 28 16:57:03 2003
+	- more doc fixes
+
 0.4  Thu Aug 07 17:22:12 2003
 	- fixed doc error (thanks Tajoli Zeno)
+	- fixed warnings that run under new Test::Harness.
+	- explicitly use IO::File
 
 0.3  Mon Jul 28 11:35:37 2003
 	- added asString() method to Net::OAI::Record::OAI_DC

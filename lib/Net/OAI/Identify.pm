@@ -21,7 +21,7 @@ Net::OAI::Indentity - Results of the Indentify OAI-PMH verb.
 sub new {
     my ( $class, %opts ) = @_;
     my $self = bless \%opts, ref( $class ) || $class;
-    $self->{ repositorName } = '';
+    $self->{ repositoryName } = '';
     $self->{ baseUrl } = '';
     $self->{ protocolVersion } = '';
     $self->{ earliestDatestamp } = '';

@@ -6,11 +6,11 @@ use warnings;
 use_ok( 'Net::OAI::Harvester' );
 
 my $h = Net::OAI::Harvester->new( 
-    baseURL => 'http://alcme.oclc.org/xtcat/servlet/OAIHandler' 
+    baseURL => 'http://memory.loc.gov/cgi-bin/oai2_0' 
 );
 isa_ok( $h, 'Net::OAI::Harvester', 'new()' );
 
-my $l = $h->listRecords( metadataPrefix => 'oai_dc' );
+my $l = $h->listRecords( metadataPrefix => 'oai_dc', set => 'papr' );
 isa_ok( $l, 'Net::OAI::ListRecords', 'listRecords()' );
 
 ok( ! $l->errorCode(), 'errorCode()' );
@@ -25,7 +25,7 @@ while ( my $r = $l->next() ) {
     my $metadata = $r->metadata();
     isa_ok( $metadata, 'Net::OAI::Record::OAI_DC' );
     ok( $metadata->title(), 
-	'meteadata title defined: '.$metadata->title() );
+	'metadata title defined: '.$metadata->title() );
 }
 
 ## resumption token

@@ -54,6 +54,8 @@ $opts{ 'from' } = $from if $from;
 $opts{ 'until' } = $until if $until;
 $opts{ 'set' } = $set if $set;
 
+RESUMPTION_TOKEN: {
+
 my $records = $harvester->listRecords( %opts );
 
 if ( $records->errorCode() ) { 
@@ -65,3 +67,14 @@ while ( my $r = $records->next() ) {
     print $r->header()->identifier(),"\n";
     print $r->metadata()->asString(),"\n\n";
 }
+
+my $resumptionToken = $records->resumptionToken();
+if ( $resumptionToken->token() ) { 
+    %opts = ();
+    $opts{ resumptionToken } = $resumptionToken->token();
+    print STDERR "using resuption token: ",$resumptionToken->token(),"\n";
+    goto RESUMPTION_TOKEN;
+}
+
+}
+
