@@ -21,7 +21,7 @@ use Net::OAI::ListSets;
 use Net::OAI::Record::Header;
 use Net::OAI::Record::OAI_DC;
 
-our $VERSION = 0.95;
+our $VERSION = 0.96;
 
 
 =head1 NAME
@@ -199,7 +199,10 @@ sub identify {
     my $self = shift;
     my $uri = $self->{ baseURL };
     $uri->query_form( 'verb' => 'Identify' );
+
     my $identity = Net::OAI::Identify->new( $self->_get( $uri ) );
+    return $identity if $identity->errorCode();
+
     my $token = Net::OAI::ResumptionToken->new( Handler => $identity );
     my $error = Net::OAI::Error->new( Handler => $token );
     my $parser = _parser( $error ); 
@@ -239,7 +242,10 @@ sub listMetadataFormats {
 	$pairs{ identifier } = $opts{ identifier }; 
     }
     $uri->query_form( %pairs );
+
     my $list = Net::OAI::ListMetadataFormats->new( $self->_get( $uri ) );
+    return $list if $list->errorCode();
+
     my $token = Net::OAI::ResumptionToken->new( Handler => $list );
     my $error = Net::OAI::Error->new( Handler => $token );
     my $parser = _parser( $error );
@@ -304,6 +310,8 @@ sub getRecord {
     );
 
     my $record = Net::OAI::GetRecord->new( $self->_get( $uri ) );
+    return $record if $record->errorCode();
+
     my $header = Net::OAI::Record::Header->new( Handler => $metadataHandler );
     my $error = Net::OAI::Error->new( Handler => $header );
     my $parser = _parser( $error ); 
@@ -401,6 +409,7 @@ sub listRecords {
 
     my $list = Net::OAI::ListRecords->new( $self->_get( $uri ), 
 	metadataHandler => $opts{ metadataHandler } );
+    return $list if $list->errorCode();
 
     my $token = Net::OAI::ResumptionToken->new( Handler => $list );
     my $error = Net::OAI::Error->new( Handler => $token );
@@ -465,7 +474,10 @@ sub listIdentifiers {
 	}
     }
     $uri->query_form( %pairs );
+
     my $list = Net::OAI::ListIdentifiers->new( $self->_get( $uri ) );
+    return( $list ) if $list->errorCode();
+
     my $token = Net::OAI::ResumptionToken->new( Handler => $list );
     my $error = Net::OAI::Error->new( Handler => $token );
     my $parser = _parser( $error );
@@ -512,7 +524,10 @@ sub listSets {
     }
     my $uri = $self->{ baseURL };
     $uri->query_form( %pairs );
+
     my $list = Net::OAI::ListSets->new( $self->_get( $uri ) );
+    return( $list ) if $list->errorCode();
+
     my $token = Net::OAI::ResumptionToken->new( Handler => $list );
     my $error = Net::OAI::Error->new( Handler => $token );
     my $parser = _parser( $error );
@@ -589,18 +604,19 @@ sub _get {
     my $response = $ua->request( $request, sub { print $fh shift; }, 4096 );
     close( $fh );
 
-    if ( $response->is_error() ) {
+    if ( $response->is_error() ) { 
+        my $error = Net::OAI::Error->new(
+            errorString     => 'HTTP Level Error: ' . $response->message(),
+            errorCode       => $response->code()
+        );
 	return( 
 	    file	    => $file, 
-	    errorCode	    => $response->code(),
-	    errorString	    => 'HTTP level error'
-	)
+            error           => $error
+	);
     }
 
     return( 
 	    file	    => $file,
-	    errorCode	    => '',
-	    errorString	    => ''
     );
 
 }

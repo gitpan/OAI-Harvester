@@ -23,9 +23,9 @@ sub new {
     my ( $class, %opts ) = @_;
     my $self = bless \%opts, ref( $class ) || $class;
     $self->{ tagStack } = [];
-    $self->{ insideError } = 0;
-    $self->{ errorCode } = '';
-    $self->{ errorString }  = '';
+    $self->{ insideError } = 0; 
+    $self->{ errorCode } = '' if ! exists( $self->{ errorCode } );
+    $self->{ errorString }  = '' if ! exists( $self->{ errorString } );
     return( $self );
 }
 

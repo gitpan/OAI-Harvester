@@ -1,10 +1,9 @@
-use Test::More tests => 5;
+use Test::More tests => 6;
 
 use strict;
 use warnings;
 
 use_ok( 'Net::OAI::Harvester' );
-
 
 ## XML Parsing Error
 
@@ -27,7 +26,18 @@ $h = Net::OAI::Harvester->new(
     baseURL => 'http://memory.loc.gov/cgi-bin/oai2_0' 
 );
 my $r = $h->listRecords( 'metadataPrefix' => 'argh' );
-is( $r->errorCode(), 'cannotDisseminateFormat', 'parsed error code from server' );
+is( 
+    $r->errorCode(), 
+    'cannotDisseminateFormat', 
+    'parsed OAI error code from server' 
+);
 
 
+## Bad URL
+
+$h = Net::OAI::Harvester->new(
+    baseURL => 'http://www.inkdroid.org/nonexistant_oai_handler'
+);
+$r = $h->identify();
+is( $r->errorString(), 'HTTP Level Error: Not Found', 'Caught HTTP error' );
 

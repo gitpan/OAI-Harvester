@@ -141,6 +141,7 @@ sub compression {
 sub start_element {
     my ( $self, $element ) = @_;
     push( @{ $self->{ tagStack } }, $element->{ Name } );
+    $self->{ insideDescription } = 1 if $element->{ Name } eq 'description';
 }
 
 sub end_element {
@@ -156,12 +157,13 @@ sub end_element {
 	$self->{ compression } = '';
     }
     pop( @{ $self->{ tagStack } } );
-
+    $self->{ insideDescription } = 0 if $element->{ Name } eq 'description';
 }
 
 sub characters {
     my ( $self, $characters ) = @_;
-    $self->{ $self->{ tagStack }[-1] } .= $characters->{ Data };
+    $self->{ $self->{ tagStack }[-1] } .= $characters->{ Data } 
+        unless $self->{ insideDescription };
 }
 
 1;

@@ -32,3 +32,15 @@ like( $emails[0], qr/@/, 'adminEmail() list context' );
 ## make sure we can call them, even though they are optional
 my $compression = $i->compression();
 my @compressions = $i->compression();
+
+## make sure we don't get stuff from sub descriptions
+$h = Net::OAI::Harvester->new( 
+    baseURL => 'http://oaigateway.grainger.uiuc.edu/oai.asp' 
+);
+$i = $h->identify();
+is( 
+    $i->repositoryName(), 
+    'University of Illinois Library at Urbana-Champaign, OAI Gateway',
+    'do not extract sub descriptions and run them together'
+);
+

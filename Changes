@@ -1,5 +1,10 @@
 Revision history for Perl extension Net::OAI::Harvester
 
+0.96    Mon Jul 19 22:12:04 2004
+        - Fixed Net::OAI::Harvester to return HTTP level errors
+        - Fixed Net::OAI::Identity to not run together sub descriptions into
+          the overall repositoryName.
+
 0.95    Thu Apr 1 13:48:54 2004
         - Fixed behavior of Net::OAI::Harvester::Record::Header::status()
           which wasn't pulling out the status attribute properly. Thanks
