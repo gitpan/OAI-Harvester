@@ -51,7 +51,7 @@ sub next {
 
     if ( $self->{ headerFileHandle }->eof() ) {
 	$self->{ headerFileHandle }->close();
-	return( undef );
+	return( $self->handleResumptionToken( 'listIdentifiers' ) );
     }
 
     my $header = fd_retrieve( $self->{ headerFileHandle } );

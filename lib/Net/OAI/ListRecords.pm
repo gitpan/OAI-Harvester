@@ -69,7 +69,7 @@ sub next {
     ## no more data to read back from our object store then return undef
     if ( $self->{ recordsFileHandle }->eof() ) {
 	$self->{ recordsFileHandle }->close();
-	return( undef );
+	return( $self->handleResumptionToken( 'listRecords' ) );
     }
 
     ## get an object back from the store, thaw and return it 

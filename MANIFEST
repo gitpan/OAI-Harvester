@@ -24,10 +24,13 @@ t/006.resumption.t
 t/010.identify.t
 t/020.listmetadata.t
 t/030.listidentifiers.t
+t/035.listallidentifiers.t
 t/040.getrecord.t
 t/050.listrecords.t
+t/055.listallrecords.t
 t/060.listsets.t
 t/MyHandler.pm
 bin/oai-listsets
 bin/oai-listrecords
+bin/oai-listmetadata
 META.yml

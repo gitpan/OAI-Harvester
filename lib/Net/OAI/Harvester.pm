@@ -21,7 +21,7 @@ use Net::OAI::ListSets;
 use Net::OAI::Record::Header;
 use Net::OAI::Record::OAI_DC;
 
-our $VERSION = 0.9;
+our $VERSION = 0.94;
 
 
 =head1 NAME
@@ -350,8 +350,13 @@ the package name of the handler.
 	# $metadata will be a MODS::Handler object
     }
 
-You must handle resumption tokens yourself, but it is fairly easy to do with a 
-loop, and the resumptionToken() method.
+If you want to automatically handle resumption tokens you can with 
+the listAllRecords() method.
+
+If you prefer you can handle resumption tokens yourself with a 
+loop, and the resumptionToken() method. You might want to do this
+if you are working with a repository that wants you to wait between
+requests.
 
     my $records = $harvester->listRecords( metadataPrefix => 'oai_dc' );
     my $finished = 0;
@@ -408,6 +413,20 @@ sub listRecords {
     return( $list );
 }
 
+=head2 listAllRecords() 
+
+Does exactly what listRecords() does except it will automatically
+submit resumption tokens as needed.
+
+=cut
+
+sub listAllRecords {
+    my $self = shift;
+    my $list = listRecords( $self, @_ );
+    $list->{ harvester } = $self;
+    return( $list );
+}
+
 =head2 listIdentifiers()
 
 listIdentifiers() takes the same parameters that listRecords() takes, but it 
@@ -415,7 +434,7 @@ returns only the record headers, allowing you to quickly retrieve all the
 record identifiers for a particular repository. The object returned is a 
 Net::OAI::ListIdentifiers object.
 
-    my $headers = $harvester->listRecords( 
+    my $headers = $harvester->listIdentifiers( 
 	metadataPrefix	=> 'oai_dc'
     );
 
@@ -424,6 +443,10 @@ Net::OAI::ListIdentifiers object.
 	print "identifier: ", $header->identifier(), "\n";
     }
 
+If you want to automtically handle resumption tokens use listAllIdentifiers().
+If you are working with a repository that encourages pauses between requests
+you can handle the tokens yourself using the technique described above
+in listRecords().
 
 =cut
 
@@ -450,6 +473,20 @@ sub listIdentifiers {
     if ( $@ ) { _xmlError( $error ); } 
     $list->{ token } = $token->token() ? $token : undef; 
     $list->{ error } = $error;
+    return( $list );
+}
+
+=head2 listAllIdentifiers()
+
+Does exactly what listIdentifiers() does except it will automatically 
+submit resumption tokens as needed.
+
+=cut
+
+sub listAllIdentifiers {
+    my $self = shift;
+    my $list = listIdentifiers( $self, @_ );
+    $list->{ harvester } = $self;
     return( $list );
 }
 
@@ -620,7 +657,20 @@ documentation for details.
 
 =head1 TODO
 
-=over 4
+=over 4 
+
+=item *
+
+Allow Net::OAI::ListMetadataFormats to store more than just the metadata
+prefixes.
+
+=item *
+
+Implement Net::OAI::Set for iterator access to Net::OAI::ListSets.
+
+=item *
+
+Implement Net::OAI::Harvester::listAllSets().
 
 =item * 
 
@@ -642,11 +692,6 @@ Create common handlers for other metadata formats (MARC, qualified DC, etc).
 
 Selectively load Net::OAI::* classes as needed, rather than getting all of them 
 at once at the beginning of Net::OAI::Harvester.
-
-=item *
-
-Wrap XML parsing, so that we can return nicer errors when the response is
-not valid XML.
 
 =back
 

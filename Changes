@@ -1,5 +1,9 @@
 Revision history for Perl extension Net::OAI::Harvester
 
+0.94	Thu Dec 11 14:04:12 2003
+	- added listAllIdentifiers() and listAllRecords() which automatically
+	  handle resumption tokens.
+
 0.9	Sun Dec 07 08:45:28 2003 
 	- Net::OAI::ListRecords now uses Storable rather than YAML since
 	  YAML cannot handle utf8 at this time. Also Storable is

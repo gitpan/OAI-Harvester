@@ -124,6 +124,23 @@ sub file {
     return( $self->{ file } );
 }
 
+sub handleResumptionToken {
+    my ( $self, $method ) = @_;
+
+    my $harvester = exists( $self->{ harvester } ) ? $self->{ harvester } : 0;
+    return() if ref($harvester) ne 'Net::OAI::Harvester';
+
+    my $rToken = $self->resumptionToken();
+    if ( $rToken ) { 
+	my $new = $harvester->$method( resumptionToken => $rToken->token() );
+	$new->{ harvester } = $harvester;
+	%$self = %$new; 
+	return( $self->next() );
+    }
+
+    return();
+}
+
 =head1 TODO
 
 =head1 SEE ALSO
