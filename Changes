@@ -1,5 +1,8 @@
 Revision history for Perl extension Net::OAI::Harvester
 
+0.86 Wed Nov 26 14:01:21 2003
+	- fixed 5/002.error to not skip ALL THE TIME!
+
 0.85 Wed Nov 26 13:45:23 2003
 	- added note to Net::OAI::Record::OAI_DC.pm to indicate the 
 	  return values in list and scalar contexts. Thanks Jose

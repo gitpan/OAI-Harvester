@@ -16,7 +16,8 @@ isa_ok( $i, 'Net::OAI::Identify' );
 
 # XML::LibXML::SAX does not return error codes properly
 SKIP: {
-    skip( 'XML::LibXML::SAX does not return errors', 1 );
+    skip( 'XML::LibXML::SAX does not return errors', 1 )
+	if ref( XML::SAX::ParserFactory->parser() ) eq 'XML::LibXML::SAX';
     is( $i->errorCode(), 'xmlParseError', 'caught XML parse error' );
 }
 
