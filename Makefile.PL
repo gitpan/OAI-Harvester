@@ -1,3 +1,4 @@
+use 5.8.0; # for utf8
 use ExtUtils::MakeMaker;
 
 WriteMakefile(
