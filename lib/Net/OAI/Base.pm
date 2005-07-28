@@ -132,7 +132,8 @@ sub handleResumptionToken {
 
     my $rToken = $self->resumptionToken();
     if ( $rToken ) { 
-	my $new = $harvester->$method( resumptionToken => $rToken->token() );
+	my $new = $harvester->$method( resumptionToken => $rToken->token(), 
+            metadataHandler => $self->{metadataHandler} );
 	$new->{ harvester } = $harvester;
 	%$self = %$new; 
 	return( $self->next() );

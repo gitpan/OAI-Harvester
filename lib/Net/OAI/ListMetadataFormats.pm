@@ -79,7 +79,7 @@ sub end_element {
         push( @{ $self->{ schemas } }, $self->{schema } );
         $self->{ schema } = '';
     } elsif ( $name eq 'metadataNamespace' ) {
-        push( @{ $self->{ namespaces } }, $self->{ namespace } );
+        push( @{ $self->{ namespaces } }, $self->{ metadataNamespace } );
         $self->{ namespace } = '';
     } else {
 	$self->SUPER::end_element( $element );
