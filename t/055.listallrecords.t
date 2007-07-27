@@ -24,7 +24,8 @@ while ( my $r = $l->next() ) {
     ok( ! exists( $seen{ $id } ), "$id not seen before" );
     $seen{ $id } = 1;
     $count++;
+    last if $count > 400;
 }
 
-ok( $count > 2000, 'listAllRecords() submitted resumption tokens' );
+ok( $count > 400, 'listAllRecords() submitted resumption tokens' );
 

@@ -84,15 +84,5 @@ sub end_element {
     }
 }
 
-sub DESTROY {
-    # remove header temp file
-    my $self = shift;
-    if ( $self->{ headerFilename } ) {
-	unlink( $self->{ headerFilename } );
-    }
-    $self->SUPER::DESTROY;
-}
-
-
 1;
 

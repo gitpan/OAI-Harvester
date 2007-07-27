@@ -16,18 +16,19 @@ WriteMakefile(
 			    },
     EXE_FILES		=> [ 
 			    'bin/oai-listsets',
-			    'bin/oai-listrecords'
+			    'bin/oai-listrecords',
+                            'bin/oai-dump'
 			   ],
 );
 
-## if they don't have XML::LibXML tell them they might want to get it
+## if they don't have XML::SAX::Expat tell them they might want to get it
 ## for performance boost.
 
-eval( 'use XML::SAX' );
+eval( 'use XML::SAX::Expat' );
 if ( !$@ ) { 
     my $found = 0;
     foreach my $parser ( @{ XML::SAX->parsers() } ) { 
-	$found = 1 if ( $parser->{ Name } eq 'XML::LibXML::SAX' );
+	$found = 1 if ( $parser->{ Name } eq 'XML::SAX::Expat' );
     }
     if ( !$found ) { 
 
@@ -35,10 +36,10 @@ if ( !$@ ) {
 
 <<MESSAGE;
 
-Note: It looks like you don't have XML::LibXML installed. This is ok 
+Note: It looks like you don't have XML::SAX::Expat installed. This is ok 
 since we have XML::SAX::PurePerl to fall back to. You might want to 
-consider installing XML::LibXML if you want to boost Net::OAI::Harvester's
-performance.
+consider installing XML::SAX::Expat if you want to boost Net::OAI::Harvester's
+performance and reliability.
 
 MESSAGE
 

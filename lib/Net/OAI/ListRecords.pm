@@ -145,14 +145,6 @@ sub end_element {
 
 }
 
-sub DESTROY {
-    my $self = shift;
-    if ( $self->{ recordsFilename } ) {
-	unlink( $self->{ recordsFilename } );
-    }
-    $self->SUPER::DESTROY;
-}
-
 sub _fatal {
     print STDERR "fatal: ", shift, "\n";
     exit(1);

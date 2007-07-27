@@ -21,7 +21,7 @@ use Net::OAI::ListSets;
 use Net::OAI::Record::Header;
 use Net::OAI::Record::OAI_DC;
 
-our $VERSION = '1.0';
+our $VERSION = '1.1';
 our $DEBUG = 0;
 
 =head1 NAME
@@ -149,7 +149,15 @@ available on the Open Archives Initiative homepage.
 	baseURL => 'http://memory.loc.gov/cgi-bin/oai2_0'
     );
 
-If you would like to fine tune the HTTP client used by Net::OAI::Harvester
+If you want to pull down all the XML files and keep them in a directory, rather
+than having the stored as transient temp files pass in the dumpDir parameter.
+
+    my $harvester = Net::OAI::Harvester->new(
+        baseUrl => 'http://memory.loc.gov/cgi-bin/oai2_0',
+        dumpDir => 'american-memory'
+    );
+
+Also if you would like to fine tune the HTTP client used by Net::OAI::Harvester
 you can pass in a configured object. For example this can be handy if you 
 want to adjust the client timeout:
 
@@ -181,6 +189,14 @@ sub new {
 	my $ua = LWP::UserAgent->new();
 	$ua->agent( $class );
 	$self->userAgent( $ua );
+    }
+
+    # set up some stuff if we are dumping xml to a directory
+    if ($normalOpts{ DUMPDIR }) {
+      my $dir = $normalOpts{ DUMPDIR };
+      croak "no such directory '$dir'" unless -d $dir;
+      $self->{ dumpDir } = $dir;
+      $self->{ lastDump } = 0;
     }
 
     return( $self );
@@ -217,7 +233,7 @@ sub identify {
     my $parser = _parser( $error ); 
     debug( "parsing Identify response " .  $identity->file() );
     eval { $parser->parse_uri( $identity->file() ) };
-    if ( $@ ) { _xmlError( $error ); } 
+    if ( $@ ) {_xmlError( $error ); } 
     $identity->{ token } = $token->token() ? $token : undef;
     $identity->{ error } = $error;
     return( $identity );
@@ -596,9 +612,21 @@ sub userAgent {
 sub _get {
     my ($self,$uri) = @_;
     my $ua = $self->{ userAgent };
-    my ( $fh, $file ) = tempfile();
+
+    my ($fh, $file);
+
+    if ( $self->{ dumpDir } ) {
+        my $filePrefix = $self->{lastDump}++;
+        $file = sprintf("%s/%08d.xml", $self->{dumpDir}, $filePrefix);
+        $fh = IO::File->new($file, 'w');
+    }
+
+    else {
+        ( $fh, $file ) = tempfile();
+    }
+
     debug( "fetching ".$uri->as_string() );
-    debug( "writing to tmp file: $file" );
+    debug( "writing to file: $file" );
     my $request = HTTP::Request->new( GET => $uri->as_string() );
     my $response = $ua->request( $request, sub { print $fh shift; }, 4096 );
     close( $fh );
@@ -629,7 +657,7 @@ sub _parser {
 
 sub _xmlError {
     my $e = shift;
-    debug( "caught xml parsing error" );
+    warn "caught xml parsing error: $@";
     $e->errorString( "XML parsing error: $@" );
     $e->errorCode( 'xmlParseError' );
 }
@@ -649,7 +677,7 @@ sub _verifyMetadataHandler {
 sub debug {
     my $msg = shift; 
     if ( $Net::OAI::Harvester::DEBUG ) { 
-	print STDERR "ockham-harvester: " . localtime() . ": $msg\n";
+	print STDERR "oai-harvester: " . localtime() . ": $msg\n";
     }
 }
 

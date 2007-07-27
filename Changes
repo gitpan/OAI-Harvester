@@ -1,5 +1,10 @@
 Revision history for Perl extension Net::OAI::Harvester
 
+1.1     Fri Jul 27 09:16:35 EDT 2007
+        - added the ability to dump xml files to a directory
+        - trapped xml parsing errors are now always printed to STDERR 
+        - added oai-dump utility
+
 1.0     Wed Jul 27 22:52:42 CDT 2005
         - resumption token handling now respects custom metadata handlers
           (thanks Thorsten Schwander)

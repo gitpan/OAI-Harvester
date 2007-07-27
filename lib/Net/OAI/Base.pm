@@ -160,13 +160,4 @@ sub handleResumptionToken {
 
 =cut
 
-# remove any temp files, when object is destroyed
-
-sub DESTROY {
-    my $self = shift;
-    if ( $self->{ file } ) { 
-	unlink( $self->{ file } );
-    }
-}
-
 1;

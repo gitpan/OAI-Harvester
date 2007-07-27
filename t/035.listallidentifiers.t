@@ -27,4 +27,4 @@ while ( my $i = $l->next() ) {
     $count++;
 }
 
-ok( $count > 2000, 'listAllIdentifiers() submitted resumption tokens' );
+ok( $count > 400, 'listAllIdentifiers() submitted resumption tokens' );

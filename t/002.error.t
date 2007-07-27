@@ -36,7 +36,7 @@ is(
 ## Bad URL
 
 $h = Net::OAI::Harvester->new(
-    baseURL => 'http://www.inkdroid.org/nonexistant_oai_handler'
+    baseURL => 'http://memory.loc.gov/cgi-bin/nonexistant_oai_handler'
 );
 $r = $h->identify();
 is( $r->errorString(), 'HTTP Level Error: Not Found', 'Caught HTTP error' );
