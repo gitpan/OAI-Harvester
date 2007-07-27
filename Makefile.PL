@@ -15,6 +15,7 @@ WriteMakefile(
 			    'Storable'		=> 0,
 			    },
     EXE_FILES		=> [ 
+                            'bin/oai-listmetadata',
 			    'bin/oai-listsets',
 			    'bin/oai-listrecords',
                             'bin/oai-dump'

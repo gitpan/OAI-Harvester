@@ -1,5 +1,8 @@
 Revision history for Perl extension Net::OAI::Harvester
 
+1.11    Fri Jul 27 11:47:21 EDT 2007
+        - added oai-dump to MANIFEST
+
 1.1     Fri Jul 27 09:16:35 EDT 2007
         - added the ability to dump xml files to a directory
         - trapped xml parsing errors are now always printed to STDERR 

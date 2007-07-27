@@ -21,7 +21,7 @@ use Net::OAI::ListSets;
 use Net::OAI::Record::Header;
 use Net::OAI::Record::OAI_DC;
 
-our $VERSION = '1.1';
+our $VERSION = '1.11';
 our $DEBUG = 0;
 
 =head1 NAME
