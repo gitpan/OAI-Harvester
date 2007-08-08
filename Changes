@@ -1,5 +1,9 @@
 Revision history for Perl extension Net::OAI::Harvester
 
+1.2     Tue Aug  7 21:48:50 EDT 2007
+        - modified t/055.listallrecords.t to not iterate over records
+          that are known to cause problems for XML::SAX::PurePerl
+
 1.11    Fri Jul 27 11:47:21 EDT 2007
         - added oai-dump to MANIFEST
 
