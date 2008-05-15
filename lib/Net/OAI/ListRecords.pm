@@ -36,7 +36,7 @@ sub new {
     
     Net::OAI::Harvester::_verifyMetadataHandler( $opts{ metadataHandler } );
     my $self = bless \%opts, ref( $class ) || $class;
-    my ( $fh, $tempfile ) = tempfile();
+    my ( $fh, $tempfile ) = tempfile(UNLINK => 1);
     binmode( $fh, ':utf8' );
     $self->{ recordsFileHandle } = $fh; 
     $self->{ recordsFilename } = $tempfile;

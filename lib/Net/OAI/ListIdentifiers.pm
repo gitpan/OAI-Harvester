@@ -27,7 +27,7 @@ sub new {
     my $self = bless \%opts, ref( $class ) || $class;
     
     ## open a temp file for storing identifiers
-    my ($fh,$filename) = tempfile();
+    my ($fh,$filename) = tempfile(UNLINK => 1);
     $self->{ headerFileHandle } = $fh;
     $self->{ headerFilename } = $filename;
     ## so we can store code refs

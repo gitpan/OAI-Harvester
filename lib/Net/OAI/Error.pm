@@ -26,6 +26,7 @@ sub new {
     $self->{ insideError } = 0; 
     $self->{ errorCode } = '' if ! exists( $self->{ errorCode } );
     $self->{ errorString }  = '' if ! exists( $self->{ errorString } );
+# do not initialize $self->{ HTTPError }
     return( $self );
 }
 
@@ -97,6 +98,20 @@ sub errorString {
     if ( $str ) { $self->{ errorString } = $str; }
     return( $self->{ errorString } );
 }
+
+=head2 HTTPError()
+
+In case of HTTP level errors, returns the associated HTTP::Response object.
+Otherwise C<undef>.
+
+
+=cut
+
+sub HTTPError {
+    my ( $self ) = @_;
+    return exists $self->{ HTTPError } ? $self->{ HTTPError } : undef;
+}
+
 
 =head1 TODO
 

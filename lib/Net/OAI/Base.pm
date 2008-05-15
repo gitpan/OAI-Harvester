@@ -84,6 +84,21 @@ sub errorString {
     return( undef );
 }
 
+=head2 HTTPError()
+
+Returns the HTTP::Response object in case of HTTP level errors.
+
+=cut
+
+sub HTTPError {
+    my ( $self ) = @_;
+    return undef unless $self->{ error };
+    return exists $self->{ error }->{ HTTPError }
+                ? $self->{ error }->{ HTTPError }
+                : undef;
+}
+
+
 =head2 resumptionToken() 
 
 Returns a Net::OAI::ResumptionToken object associated with the call. If 
@@ -110,6 +125,7 @@ sub xml {
     ## slurp entire file into $xml
     local $/ = undef;
     my $xml = <XML>;
+    close(XML);            # prevent tempfile leak on Win32
     return( $xml );
 }
 

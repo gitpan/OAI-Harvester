@@ -1,4 +1,4 @@
-use Test::More tests => 6;
+use Test::More tests => 8;
 
 use strict;
 use warnings;
@@ -12,6 +12,8 @@ isa_ok( $h, 'Net::OAI::Harvester' );
 
 my $i = $h->identify();
 isa_ok( $i, 'Net::OAI::Identify' );
+
+is( ($i->HTTPError ? "exists" : "absent"), 'absent', 'No HTTP error respnse');
 
 # XML::LibXML::SAX does not return error codes properly
 SKIP: {
@@ -41,3 +43,4 @@ $h = Net::OAI::Harvester->new(
 $r = $h->identify();
 is( $r->errorString(), 'HTTP Level Error: Not Found', 'Caught HTTP error' );
 
+is( $r->HTTPError->status_line, '404 Not Found', 'Collected HTTP error response');

@@ -1,14 +1,53 @@
-# http://module-build.sourceforge.net/META-spec.html
-#XXXXXXX This is a prototype!!!  It will change in the future!!! XXXXX#
-name:         OAI-Harvester
-version:      1.12
-version_from: lib/Net/OAI/Harvester.pm
-installdirs:  site
+---
+name: OAI-Harvester
+version: 1.13
+author:
+  - 'Ed Summers <ehs@pobox.com>'
+  - 'Martin Emmerich <Martin.Emmerich@oew.de>'
+abstract: A package for harvesting metadata using OAI-PMH
+license: perl
+resources:
+  license: http://dev.perl.org/licenses/
 requires:
-    LWP::UserAgent:                0
-    Storable:                      0
-    URI:                           0
-    XML::SAX:                      0
-
-distribution_type: module
-generated_by: ExtUtils::MakeMaker version 6.30
+  Carp: 0
+  File::Temp: 0
+  IO::File: 0
+  LWP::UserAgent: 2.0
+  Storable: 2.0
+  URI: 1.3
+  XML::SAX: 0.1
+  perl: 5.8.0
+recommends:
+  XML::SAX::ExpatXS: 0
+provides:
+  Net::OAI::Base:
+    file: lib/Net/OAI/Base.pm
+  Net::OAI::Error:
+    file: lib/Net/OAI/Error.pm
+  Net::OAI::GetRecord:
+    file: lib/Net/OAI/GetRecord.pm
+  Net::OAI::Harvester:
+    file: lib/Net/OAI/Harvester.pm
+    version: 1.13
+  Net::OAI::Identify:
+    file: lib/Net/OAI/Identify.pm
+  Net::OAI::ListIdentifiers:
+    file: lib/Net/OAI/ListIdentifiers.pm
+  Net::OAI::ListMetadataFormats:
+    file: lib/Net/OAI/ListMetadataFormats.pm
+  Net::OAI::ListRecords:
+    file: lib/Net/OAI/ListRecords.pm
+  Net::OAI::ListSets:
+    file: lib/Net/OAI/ListSets.pm
+  Net::OAI::Record:
+    file: lib/Net/OAI/Record.pm
+  Net::OAI::Record::Header:
+    file: lib/Net/OAI/Record/Header.pm
+  Net::OAI::Record::OAI_DC:
+    file: lib/Net/OAI/Record/OAI_DC.pm
+  Net::OAI::ResumptionToken:
+    file: lib/Net/OAI/ResumptionToken.pm
+generated_by: Module::Build version 0.2808
+meta-spec:
+  url: http://module-build.sourceforge.net/META-spec-v1.2.html
+  version: 1.2

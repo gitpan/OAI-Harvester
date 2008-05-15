@@ -1,6 +1,20 @@
 Revision history for Perl extension Net::OAI::Harvester
 
-1.2     Tue Aug  7 21:48:50 EDT 2007
+1.13    Fri May  9 17:34:15 WEDT 2008 (Thomas Berger <THB at cpan dot org>) 
+        - ListMetadataFormats: namespaces() glued previous names with current;
+              new methods: namespaces_byprefix() and schemas_byprefix() 
+        - added HTTPError() method for access to underlying HTTP::Response
+              object (in case of HTTP errors only)
+          NOTE: file() now will yield undef in this case (was: name of
+              non-existing file)
+        - baseURL() had trailing garbage when called after a request
+        - enforce tempfile cleanup by adding UNLINK=>1 to all tempfile() calls
+        - Base.pm: avoid tempfile pollution on Win32 when using xml() method
+        - Module::Build support
+        - Tests: Fixed broken nsdl repository URL
+
+
+1.12    Tue Aug  7 21:48:50 EDT 2007
         - modified t/055.listallrecords.t to not iterate over records
           that are known to cause problems for XML::SAX::PurePerl
 

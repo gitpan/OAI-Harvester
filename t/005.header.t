@@ -30,11 +30,11 @@ is( $sets1[1], 'bar', 'sets() 3' );
 use_ok( 'Net::OAI::Harvester' );
 
 my $h = Net::OAI::Harvester->new( 
-    baseURL => 'http://services.nsdl.org:8080/nsdloai/OAI' 
+    baseURL => 'http://ndr.nsdl.org/oai' 
 );
 isa_ok( $h, 'Net::OAI::Harvester', 'new()' );
 
-my $id = 'oai:nsdl.org:316878:oai:asdlib.org:';
+my $id = 'oai:nsdl.org:2200-20061003060154377T';
 my $r = $h->getRecord( identifier => $id, metadataPrefix => 'oai_dc' );
 ok( ! $r->errorCode(), "errorCode()" );
 ok( ! $r->errorString(), "errorString()" );

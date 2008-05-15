@@ -46,6 +46,18 @@ sub namespaces {
     return( @{ $self->{ namespaces } } );
 }
 
+=head2 namespaces_byprefix()
+
+Returns the namespace URI associated to a given metadataPrefix.
+
+=cut
+
+sub namespaces_byprefix {
+    my ($self, $prefix) = @_;
+    return $self->{namespaces_byprefix}->{$prefix};
+}
+
+
 =head2 schemas()
 
 =cut
@@ -54,6 +66,18 @@ sub schemas {
     my $self = shift;
     return( @{ $self->{ schemas } } );
 }
+
+=head2 schemas_byprefix()
+
+Returns the schema URI associated to a given metadataPrefix.
+
+=cut
+
+sub schemas_byprefix {
+    my ($self, $prefix) = @_;
+    return $self->{schemas_byprefix}->{$prefix};
+}
+
 
 ## SAX Handlers
 
@@ -72,15 +96,22 @@ sub end_element {
     my $name = $element->{ Name };
     if ( $name eq 'ListMetadataFormats' ) {
 	$self->{ insideList } = 0;
+    } elsif ( $name eq 'metadataFormat' ) {
+        my $nspf = delete $self->{ _currpf };
+        $self->{ namespaces_byprefix }->{ $nspf } = delete $self->{ _currns };
+        $self->{ schemas_byprefix }->{ $nspf } = delete $self->{ _currxs };
     } elsif ( $name eq 'metadataPrefix' ) {
 	push( @{ $self->{ metadataPrefixes } }, $self->{ metadataPrefix } );
+        $self->{ _currpf } = $self->{ metadataPrefix };
 	$self->{ metadataPrefix } = '';
     } elsif ( $name eq 'schema' ) {
         push( @{ $self->{ schemas } }, $self->{schema } );
+        $self->{ _currxs } = $self->{ schema };
         $self->{ schema } = '';
     } elsif ( $name eq 'metadataNamespace' ) {
         push( @{ $self->{ namespaces } }, $self->{ metadataNamespace } );
-        $self->{ namespace } = '';
+        $self->{ _currns } = $self->{ metadataNamespace };
+        $self->{ metadataNamespace } = '';
     } else {
 	$self->SUPER::end_element( $element );
     }

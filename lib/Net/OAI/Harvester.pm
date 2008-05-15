@@ -21,7 +21,7 @@ use Net::OAI::ListSets;
 use Net::OAI::Record::Header;
 use Net::OAI::Record::OAI_DC;
 
-our $VERSION = '1.12';
+our $VERSION = '1.13';
 our $DEBUG = 0;
 
 =head1 NAME
@@ -586,7 +586,12 @@ Or if you want to know what the current baseURL is
 sub baseURL {
     my ( $self, $url ) = @_;
     if ( $url ) { $self->{ baseURL } = URI->new( $url ); } 
-    return( $self->{ baseURL }->as_string() );
+# The HTTP UserAgent modifies its URI object upon execution,
+# therefore we have to reconstruct: trim the query part ...
+    my $c = $self->{ baseURL }->canonical();
+    if ( $c && ($c =~ /^([^\?]*)\?/) ) {  # $c might be undefined
+        return $1};
+    return $c;
 }
 
 =head2 userAgent()
@@ -622,7 +627,7 @@ sub _get {
     }
 
     else {
-        ( $fh, $file ) = tempfile();
+        ( $fh, $file ) = tempfile(UNLINK => 1);
     }
 
     debug( "fetching ".$uri->as_string() );
@@ -632,13 +637,17 @@ sub _get {
     close( $fh );
 
     if ( $response->is_error() ) { 
+# HTTP::Request does not provide a file in case of HTTP level errors,
+# therefore we do not return the name of the non-existant file but
+# rather the original HTTP::Response object
         debug( "caught HTTP level error" . $response->message() );
         my $error = Net::OAI::Error->new(
             errorString     => 'HTTP Level Error: ' . $response->message(),
-            errorCode       => $response->code()
+            errorCode       => $response->code(),
+            HTTPError       => $response,
         );
 	return( 
-	    file	    => $file, 
+#	    file	    => $file, 
             error           => $error
 	);
     }
