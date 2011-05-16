@@ -1,5 +1,16 @@
 Revision history for Perl extension Net::OAI::Harvester
 
+1.14    Mon May 16 22:57:24 CEST 2011
+        - Installation: Makefile.PL and Build.PL failed if XML::SAX::Expat
+          was installed and XML::SAX not (probably a border case only with
+          "standalone" versions of XML::SAX::Base)
+        - Changed messages: ExpatXS should give the mentioned "performance
+          boost"
+        - Tests: Check if XML::SAX::ParserFactory delivered a parser
+          introduce NOH_ParserPackage environment variable
+
+
+
 1.13    Fri May  9 17:34:15 WEDT 2008 (Thomas Berger <THB at cpan dot org>) 
         - ListMetadataFormats: namespaces() glued previous names with current;
               new methods: namespaces_byprefix() and schemas_byprefix() 

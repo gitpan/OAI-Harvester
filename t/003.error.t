@@ -2,6 +2,7 @@ use Test::More tests => 8;
 
 use strict;
 use warnings;
+$XML::SAX::ParserPackage = $XML::SAX::ParserPackage ||= $ENV{'NOH_ParserPackage'};
 
 use_ok( 'Net::OAI::Harvester' );
 
@@ -13,7 +14,7 @@ isa_ok( $h, 'Net::OAI::Harvester' );
 my $i = $h->identify();
 isa_ok( $i, 'Net::OAI::Identify' );
 
-is( ($i->HTTPError ? "exists" : "absent"), 'absent', 'No HTTP error respnse');
+is( ($i->HTTPError ? "exists" : "absent"), 'absent', 'No HTTP error response');
 
 # XML::LibXML::SAX does not return error codes properly
 SKIP: {

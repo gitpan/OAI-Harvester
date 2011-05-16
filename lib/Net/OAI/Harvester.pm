@@ -21,7 +21,7 @@ use Net::OAI::ListSets;
 use Net::OAI::Record::Header;
 use Net::OAI::Record::OAI_DC;
 
-our $VERSION = '1.13';
+our $VERSION = '1.14';
 our $DEBUG = 0;
 
 =head1 NAME
@@ -661,7 +661,10 @@ sub _get {
 sub _parser {
     my $handler = shift;
     my $factory = XML::SAX::ParserFactory->new();
-    return( $factory->parser( Handler => $handler ) );
+    $factory->require_feature(Namespaces);
+    my $parser = $factory->parser( Handler => $handler );
+    debug( "using SAX parser " . ref($parser) . " " . $parser->VERSION );
+    return $parser;
 }
 
 sub _xmlError {

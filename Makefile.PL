@@ -22,28 +22,27 @@ WriteMakefile(
     PL_FILES		=> {},
 );
 
-## if they don't have XML::SAX::Expat tell them they might want to get it
-## for performance boost.
+## if they either don't have XML::SAX::ExpatXS or XML::SAX cannot locate it
+## (there are notorious problems with respect to parserdetails.ini)
+## tell them they might want to get it
 
-eval( 'use XML::SAX::Expat' );
-if ( !$@ ) { 
+eval( 'use XML::SAX' ); # existence was not enforced by the constructor above...
+unless ( $@ ) { 
     my $found = 0;
     foreach my $parser ( @{ XML::SAX->parsers() } ) { 
-	$found = 1 if ( $parser->{ Name } eq 'XML::SAX::Expat' );
-    }
-    if ( !$found ) { 
+	$found = 1 if $parser->{ Name } eq 'XML::SAX::ExpatXS'};
 
+    unless ( $found ) { 
 	print 
 
 <<MESSAGE;
 
-Note: It looks like you don't have XML::SAX::Expat installed. This is ok 
-since we have XML::SAX::PurePerl to fall back to. You might want to 
-consider installing XML::SAX::Expat if you want to boost Net::OAI::Harvester's
-performance and reliability.
+Note: It looks like you don't have XML::SAX::ExpatXS installed. 
+      This is ok since we have XML::SAX::PurePerl to fall back to.
+      You might want to consider installing XML::SAX::ExpatXS if you 
+      want to boost Net::OAI::Harvester's performance and reliability.
 
 MESSAGE
-
     }
 }
 
@@ -51,12 +50,10 @@ MESSAGE
 ## a general message about needing to be connected to the net for tests
 
 print 
-
 <<MESSAGE;
 
 Note: for 'make test' to work you must be connected to the Internet. The
 tests use the OAI-PMH repositories at the Library of Congress and OCLC.
 
 MESSAGE
-
 

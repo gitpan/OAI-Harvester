@@ -24,7 +24,8 @@ README
 README.txt
 t/000.harvester.t
 t/001.ua.t
-t/002.error.t
+t/002.parser.t
+t/003.error.t
 t/005.header.t
 t/006.resumption.t
 t/010.identify.t

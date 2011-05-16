@@ -1,6 +1,8 @@
 use Test::More tests=>5;
 
 use strict;
+$XML::SAX::ParserPackage = $XML::SAX::ParserPackage ||= $ENV{'NOH_ParserPackage'};
+
 use_ok( 'Net::OAI::ResumptionToken' );
 
 my $token = Net::OAI::ResumptionToken->new();

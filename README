@@ -9,10 +9,20 @@ INSTALLATION
 
 You *must* be connected to the Internet to run the test suite.
 
+Either:
+
+perl Build.PL
+Build
+Build test
+Build install
+
+Or:
+
 perl Makefile.PL
 make
 make test
 make install
+
 
 DEPENDENCIES
 
@@ -27,10 +37,21 @@ Storable - for object serialization
 You also probably should be using Perl 5.8.0 at least since many repositories 
 contain UTF8 data.
 
+TROUBLESHOOTING
+
+The test suite recognizes the environment variable NOH_ParserPackage to
+force usage of an specific parser:
+
+NOH_ParserPackage=XML::SAX::PurePerl ./Build test
+
+This is to work around cases where the file ParserDetails.ini of
+XML::SAX::ParserFactory is not (yet) set up properly.
+
+
 COPYRIGHT AND LICENCE
 
 This software is free software and may be distributed under the same
-terms as Perl itself .
+terms as Perl itself.
 
 Copyright (C) 2003 Ed Summers <ehs@pobox.com>
 

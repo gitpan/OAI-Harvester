@@ -3,6 +3,7 @@ use File::Path;
 use IO::Dir;
 use strict;
 use warnings;
+$XML::SAX::ParserPackage = $XML::SAX::ParserPackage ||= $ENV{'NOH_ParserPackage'};
 
 use_ok( 'Net::OAI::Harvester' );
 

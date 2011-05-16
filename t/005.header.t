@@ -2,6 +2,8 @@ use Test::More tests=>14;
 
 use strict;
 use warnings;
+$XML::SAX::ParserPackage = $XML::SAX::ParserPackage ||= $ENV{'NOH_ParserPackage'};
+
 use_ok( 'Net::OAI::Record::Header' );
 
 my $header1 = Net::OAI::Record::Header->new();
@@ -30,11 +32,11 @@ is( $sets1[1], 'bar', 'sets() 3' );
 use_ok( 'Net::OAI::Harvester' );
 
 my $h = Net::OAI::Harvester->new( 
-    baseURL => 'http://ndr.nsdl.org/oai' 
+    baseURL => 'http://eprints.dcs.warwick.ac.uk/cgi/oai2' 
 );
 isa_ok( $h, 'Net::OAI::Harvester', 'new()' );
 
-my $id = 'oai:nsdl.org:2200-20061003060154377T';
+my $id = 'oai:generic.eprints.org:399';
 my $r = $h->getRecord( identifier => $id, metadataPrefix => 'oai_dc' );
 ok( ! $r->errorCode(), "errorCode()" );
 ok( ! $r->errorString(), "errorString()" );

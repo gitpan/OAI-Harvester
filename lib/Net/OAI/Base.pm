@@ -121,6 +121,7 @@ as XML.
 
 sub xml {
     my(  $self, %args ) = shift;
+    return undef unless $self->{ file };    # not set eg. after HTTP error
     open( XML, $self->{ file } ) || die "unable to open $self->{ file }";
     ## slurp entire file into $xml
     local $/ = undef;

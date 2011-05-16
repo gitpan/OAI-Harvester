@@ -9,10 +9,20 @@ INSTALLATION
 
 You *must* be connected to the Internet to run the test suite.
 
+Either:
+
+perl Build.PL
+Build
+Build test
+Build install
+
+Or:
+
 perl Makefile.PL
 make
 make test
 make install
+
 
 DEPENDENCIES
 
@@ -30,7 +40,7 @@ contain UTF8 data.
 COPYRIGHT AND LICENCE
 
 This software is free software and may be distributed under the same
-terms as Perl itself .
+terms as Perl itself.
 
 Copyright (C) 2003 Ed Summers <ehs@pobox.com>
 

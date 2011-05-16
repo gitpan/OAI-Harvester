@@ -11,6 +11,7 @@ my $build = Module::Build->new(
         'Storable'		=> '2.0',
         'URI'		        => '1.3',
         'XML::SAX'		=> '0.1',
+        'XML::SAX::Base'	=> '0.1',
         'Carp'                  => 0,
         'File::Temp'            => 0,
         'IO::File'              => 0,
@@ -25,27 +26,45 @@ my $build = Module::Build->new(
       ],
     sign => 0,
   );
-## if they don't have XML::SAX::Expat tell them they might want to get it
-## for performance boost.
 
-eval( 'use XML::SAX::Expat' );
-if ( !$@ ) { 
+## if they either don't have XML::SAX::ExpatXS or XML::SAX cannot locate it
+## (there are notorious problems with respect to parserdetails.ini)
+## tell them they might want to get it
+
+eval( 'use XML::SAX' ); # existence was not enforced by the constructor above...
+unless ( $@ ) {
     my $found = 0;
-    eval( 'use XML::SAX' );
+    my $any = 0;
     foreach my $parser ( @{ XML::SAX->parsers() } ) { 
-	$found = 1 if ( $parser->{ Name } eq 'XML::SAX::Expat' );
-    }
+        $any ++;
+	$found = 1 if $parser->{ Name } eq 'XML::SAX::ExpatXS'}
 
-    if ( !$found ) { 
-	print <<MESSAGE;
+    if ( $any ) {
+        unless ( $found ) { 
+	    print <<MESSAGE;
 
-Note: It looks like you don't have XML::SAX::Expat installed. This is ok 
-since we have XML::SAX::PurePerl to fall back to. You might want to 
-consider installing XML::SAX::Expat if you want to boost Net::OAI::Harvester's
-performance and reliability.
+Note: It looks like you don't have XML::SAX::ExpatXS installed. 
+      This is ok since we have XML::SAX::PurePerl to fall back to.
+      You might want to consider installing XML::SAX::ExpatXS if you 
+      want to boost Net::OAI::Harvester's performance and reliability.
 
 MESSAGE
-    }
+        }
+     }
+   else {
+	print <<MESSAGE;
+
+WARNING: It looks like you don't have any XML::SAX parsers installed.
+
+      Please check ParserDetails.ini if appropriate for your version
+      of XML::SAX::ParserFactory.
+
+      For the Build test you may force a specific parser as follows:
+
+NOH_ParserPackage=XML::SAX::PurePerl ./Build test
+
+MESSAGE
+     }
 }
 
 
