@@ -20,7 +20,7 @@ provides:
     file: lib/Net/OAI/GetRecord.pm
   Net::OAI::Harvester:
     file: lib/Net/OAI/Harvester.pm
-    version: v1.14.1
+    version: 1.14
   Net::OAI::Identify:
     file: lib/Net/OAI/Identify.pm
   Net::OAI::ListIdentifiers:
@@ -55,4 +55,4 @@ requires:
   perl: v5.8.0
 resources:
   license: http://dev.perl.org/licenses/
-version: v1.14.1
+version: 1.14
