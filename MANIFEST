@@ -21,7 +21,6 @@ Makefile.PL
 MANIFEST
 META.yml
 README
-README.txt
 t/000.harvester.t
 t/001.ua.t
 t/002.parser.t

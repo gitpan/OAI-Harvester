@@ -10,9 +10,13 @@ WriteMakefile(
     'AUTHOR'		=> 'Ed Summers <ehs@pobox.com>',
     'PREREQ_PM'		=> { 
 			    'LWP::UserAgent'	=> '2.0',
-			    'XML::SAX'		=> '0.1',
-			    'URI'		=> '1.3',
 			    'Storable'		=> '2.0',
+			    'URI'		=> '1.3',
+			    'XML::SAX'		=> '0.12',
+			    'XML::SAX::Base'	=> '1.04',
+			    'Carp'		=> 0,
+			    'File::Temp'	=> 0,
+			    'IO::File'		=> 0,
 			    },
     EXE_FILES		=> [ 
 			    'bin/oai-listsets',

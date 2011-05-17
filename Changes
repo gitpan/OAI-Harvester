@@ -1,5 +1,14 @@
 Revision history for Perl extension Net::OAI::Harvester
 
+v1.14.01  Tue May 17 18:50:03 CEST 2011
+        - Switched to three-component version numbers
+        - Record::OAI_DC: asString() now returns the string and does not print
+          any more
+        - Dependencies: XML::SAX::Base v1.04 (as per XML-SAX since v0.11
+          and opposed to the standalone version on CPAN) is really a necessary
+          prerequisite! (Thanks to Dave Sheroman for testing this out)
+
+
 1.14    Mon May 16 22:57:24 CEST 2011
         - Installation: Makefile.PL and Build.PL failed if XML::SAX::Expat
           was installed and XML::SAX not (probably a border case only with

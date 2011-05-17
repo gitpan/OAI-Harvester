@@ -2,6 +2,7 @@ package Net::OAI::Record::OAI_DC;
 
 use strict;
 use base qw( XML::SAX::Base );
+our $VERSION = 'v1.00.0';
 
 our @OAI_DC_ELEMENTS = qw(
     title 
@@ -107,11 +108,14 @@ sub AUTOLOAD {
 
 sub asString {
     my $self = shift;
+    my @result;
     foreach my $element ( @OAI_DC_ELEMENTS ) {
+        next unless $self->{ $element };
 	foreach ( @{ $self->{ $element } } ) {
-	    print "$element => $_\n";
+	    push(@result, "$element => $_");
 	}
     }
+    return join("\n", @result);
 }
 
 ## SAX handlers

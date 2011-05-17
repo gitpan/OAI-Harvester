@@ -29,7 +29,7 @@ NOH_ParserPackage=XML::SAX::PurePerl ./Build test
 XxX
   }
 else {
-    diag("\nNote: tests will use ".ref($parser)." provided by XML::SAX::ParserFactory")}
+    diag("\nNote: tests will use ".ref($parser)." assigned by XML::SAX::ParserFactory")}
 
 ## force XML::SAX::PurePerl
 $XML::SAX::ParserPackage = "XML::SAX::PurePerl";

@@ -6,23 +6,23 @@ my $build = Module::Build->new(
     module_name => 'Net::OAI::Harvester',
     license  => 'perl',
     requires => {
-        'perl'                  => '5.8.0',
-        'LWP::UserAgent'	=> '2.0',
-        'Storable'		=> '2.0',
-        'URI'		        => '1.3',
-        'XML::SAX'		=> '0.1',
-        'XML::SAX::Base'	=> '0.1',
-        'Carp'                  => 0,
-        'File::Temp'            => 0,
-        'IO::File'              => 0,
+	'perl'			=> '5.8.0',
+	'LWP::UserAgent'	=> '2.0',
+	'Storable'		=> '2.0',
+	'URI'		        => '1.3',
+	'XML::SAX'		=> '0.12',
+	'XML::SAX::Base'	=> '1.04',
+	'Carp'			=> 0,
+	'File::Temp'		=> 0,
+	'IO::File'		=> 0,
       },
     recommends => {
-        'XML::SAX::ExpatXS'     => 0,
+	'XML::SAX::ExpatXS'	=> 0,
       },
     script_files => [
-         'bin/oai-listsets',
-         'bin/oai-listrecords',
-         'bin/oai-dump'
+	'bin/oai-listsets',
+	'bin/oai-listrecords',
+	'bin/oai-dump'
       ],
     sign => 0,
   );
@@ -72,8 +72,8 @@ MESSAGE
 
 print <<MESSAGE;
 
-Note: for 'make test' to work you must be connected to the Internet. The
-tests use the OAI-PMH repositories at the Library of Congress and OCLC.
+Note: for './Build test' to work you must be connected to the Internet.
+The tests use the OAI-PMH repositories at the Library of Congress and OCLC.
 
 MESSAGE
 

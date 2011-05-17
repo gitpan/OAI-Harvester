@@ -2,6 +2,7 @@ package Net::OAI::Record::Header;
 
 use strict;
 use base qw( XML::SAX::Base );
+our $VERSION = 'v1.00.0';
 
 =head1 NAME
 

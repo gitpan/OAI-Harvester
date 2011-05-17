@@ -20,7 +20,7 @@ provides:
     file: lib/Net/OAI/GetRecord.pm
   Net::OAI::Harvester:
     file: lib/Net/OAI/Harvester.pm
-    version: 1.14
+    version: v1.14.1
   Net::OAI::Identify:
     file: lib/Net/OAI/Identify.pm
   Net::OAI::ListIdentifiers:
@@ -35,8 +35,10 @@ provides:
     file: lib/Net/OAI/Record.pm
   Net::OAI::Record::Header:
     file: lib/Net/OAI/Record/Header.pm
+    version: v1.0.0
   Net::OAI::Record::OAI_DC:
     file: lib/Net/OAI/Record/OAI_DC.pm
+    version: v1.0.0
   Net::OAI::ResumptionToken:
     file: lib/Net/OAI/ResumptionToken.pm
 recommends:
@@ -48,9 +50,9 @@ requires:
   LWP::UserAgent: 2.0
   Storable: 2.0
   URI: 1.3
-  XML::SAX: 0.1
-  XML::SAX::Base: 0.1
+  XML::SAX: 0.12
+  XML::SAX::Base: 1.04
   perl: v5.8.0
 resources:
   license: http://dev.perl.org/licenses/
-version: 1.14
+version: v1.14.1
