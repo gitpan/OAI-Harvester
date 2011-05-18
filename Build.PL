@@ -37,7 +37,8 @@ unless ( $@ ) {
     my $any = 0;
     foreach my $parser ( @{ XML::SAX->parsers() } ) { 
         $any ++;
-	$found = 1 if $parser->{ Name } eq 'XML::SAX::ExpatXS'}
+	$found = 1 if $parser->{ Name } eq 'XML::SAX::ExpatXS';
+      }
 
     if ( $any ) {
         unless ( $found ) { 
@@ -59,11 +60,15 @@ WARNING: It looks like you don't have any XML::SAX parsers installed.
       Please check ParserDetails.ini if appropriate for your version
       of XML::SAX::ParserFactory.
 
+      OAI-Harvester will resort to XML::SAX::PurePerl which has the
+      appropriate properties and comes with the XML::SAX distribution.
+
       For the Build test you may force a specific parser as follows:
 
 NOH_ParserPackage=XML::SAX::PurePerl ./Build test
 
 MESSAGE
+      
      }
 }
 

@@ -1,5 +1,12 @@
 Revision history for Perl extension Net::OAI::Harvester
 
+1.14bi  Wed May 18 16:29:31 CEST 2011
+	- Explicit fallback to XML::SAX::PurePerl if we don't get a parser
+          (we know that XML::SAX::PurePerl has the required features and
+          does exist): Warn about probably broken XML::SAX installation and
+          issues with ParserDetails.ini [Fix mainly motivated by reputation
+          management: Far too many smoke tests failing because of automated
+          (=> no ParserDetails.ini => broken) installs of XML::SAX]
 1.14a   Tue May 17 18:50:03 CEST 2011
         - Record::OAI_DC: asString() now returns the string and does not print
           any more
@@ -15,8 +22,6 @@ Revision history for Perl extension Net::OAI::Harvester
         - Tests: Check if XML::SAX::ParserFactory delivered a parser
           introduce NOH_ParserPackage environment variable
 
-
-
 1.13    Fri May  9 17:34:15 WEDT 2008 (Thomas Berger <THB at cpan dot org>) 
         - ListMetadataFormats: namespaces() glued previous names with current;
               new methods: namespaces_byprefix() and schemas_byprefix() 
@@ -29,7 +34,6 @@ Revision history for Perl extension Net::OAI::Harvester
         - Base.pm: avoid tempfile pollution on Win32 when using xml() method
         - Module::Build support
         - Tests: Fixed broken nsdl repository URL
-
 
 1.12    Tue Aug  7 21:48:50 EDT 2007
         - modified t/055.listallrecords.t to not iterate over records

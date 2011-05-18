@@ -117,7 +117,8 @@ returns 100,000 records.
 XML::SAX filters are used which will allow interested developers to write 
 their own metadata parsing packages, and drop them into place. This is useful
 because OAI-PMH is itself metadata schema agnostic, so you can use OAI-PMH 
-to distribute all kinds of metadata (Dublin Core, MARC, EAD, or your favorite metadata schema). OAI-PMH does require that a repository at least provides 
+to distribute all kinds of metadata (Dublin Core, MARC, EAD, or your favorite
+metadata schema). OAI-PMH does require that a repository at least provides 
 Dublin Core metadata as a baseline. Net::OAI::Harvester has built in support for 
 unqualified Dublin Core, and has a framework for dropping in your own parser 
 for other kinds of metadata. If you create a XML::Handler that you would like 
@@ -661,10 +662,26 @@ sub _get {
 sub _parser {
     my $handler = shift;
     my $factory = XML::SAX::ParserFactory->new();
+    my $parser;
     $factory->require_feature(Namespaces);
-    my $parser = $factory->parser( Handler => $handler );
-    debug( "using SAX parser " . ref($parser) . " " . $parser->VERSION );
-    return $parser;
+    eval { $parser = $factory->parser( Handler => $handler ) };
+    warn ref($factory)." threw an exception:\n\t$@" if $@;
+
+    if ( $parser && ref($parser) ) {
+        debug( "using SAX parser " . ref($parser) . " " . $parser->VERSION );
+        return $parser;
+      };
+
+    warn "!!! Please check your setup of XML::SAX, especially ParserDetails.ini !!!\n";
+    local($XML::SAX::ParserPackage) = "XML::SAX::PurePerl";
+    eval { $parser = $factory->parser( Handler => $handler ) };
+    warn ref($factory)." threw an exception again:\n\t$@" if $@;
+    if ( $parser && ref($parser) ) {
+        warn "Successfuly forced assignment of a parser: " . ref($parser) . " " . $parser->VERSION ."\n";
+        return $parser;
+      };
+
+    croak( ref($factory)." on request did not even give us the default XML::SAX::PurePerl parser.\nGiving up." );
 }
 
 sub _xmlError {

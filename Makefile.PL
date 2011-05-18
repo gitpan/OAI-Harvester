@@ -33,18 +33,38 @@ WriteMakefile(
 eval( 'use XML::SAX' ); # existence was not enforced by the constructor above...
 unless ( $@ ) { 
     my $found = 0;
+    my $any = 0;
     foreach my $parser ( @{ XML::SAX->parsers() } ) { 
-	$found = 1 if $parser->{ Name } eq 'XML::SAX::ExpatXS'};
+        $any ++;
+	$found = 1 if $parser->{ Name } eq 'XML::SAX::ExpatXS';
+      };
 
-    unless ( $found ) { 
-	print 
-
-<<MESSAGE;
+    if ( $any ) {
+        unless ( $found ) { 
+	    print <<MESSAGE;
 
 Note: It looks like you don't have XML::SAX::ExpatXS installed. 
       This is ok since we have XML::SAX::PurePerl to fall back to.
       You might want to consider installing XML::SAX::ExpatXS if you 
       want to boost Net::OAI::Harvester's performance and reliability.
+
+MESSAGE
+        }
+     }
+   else {
+	print <<MESSAGE;
+
+WARNING: It looks like you don't have any XML::SAX parsers installed.
+
+      Please check ParserDetails.ini if appropriate for your version
+      of XML::SAX::ParserFactory.
+
+      OAI-Harvester will resort to XML::SAX::PurePerl which has the
+      appropriate properties and comes with the XML::SAX distribution.
+
+      For the Build test you may force a specific parser as follows:
+
+NOH_ParserPackage=XML::SAX::PurePerl make test
 
 MESSAGE
     }
