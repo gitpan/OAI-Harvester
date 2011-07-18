@@ -1,4 +1,3 @@
-use 5.8.0; # for utf8
 use Module::Build;
 
 my $build = Module::Build->new(
@@ -15,6 +14,10 @@ my $build = Module::Build->new(
 	'Carp'			=> 0,
 	'File::Temp'		=> 0,
 	'IO::File'		=> 0,
+      },
+    configure_requires => {
+	'XML::SAX'		=> 0,  # we want to comment on the correct setup here
+	'Module::Build'		=> 0,  # ExtUtils::MakeMaker still an option...
       },
     recommends => {
 	'XML::SAX::ExpatXS'	=> 0,

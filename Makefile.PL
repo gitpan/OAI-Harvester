@@ -1,13 +1,15 @@
-use 5.8.0; # for utf8
 use ExtUtils::MakeMaker;
 
 WriteMakefile(
-    'NAME'		=> 'OAI-Harvester',
+    'NAME'		=> 'Net::OAI::Harvester',
     'DISTNAME'		=> 'OAI-Harvester',
     'ABSTRACT'		=> 'A package for harvesting metadata using OAI-PMH',
+    'LICENSE'		=> 'perl',
     'VERSION_FROM'	=> 'lib/Net/OAI/Harvester.pm', 
     'PMLIBDIRS'		=> [ qw( lib/ ) ],
     'AUTHOR'		=> 'Ed Summers <ehs@pobox.com>',
+    'MIN_PERL_VERSION'	=> '5.8.0',
+    'PERL_MALLOC_OK'	=> 1,
     'PREREQ_PM'		=> { 
 			    'LWP::UserAgent'	=> '2.0',
 			    'Storable'		=> '2.0',
@@ -18,12 +20,16 @@ WriteMakefile(
 			    'File::Temp'	=> 0,
 			    'IO::File'		=> 0,
 			    },
+    'CONFIGURE_REQUIRES' => { 
+			    'XML::SAX'		=> 0,
+			    },
     EXE_FILES		=> [ 
 			    'bin/oai-listsets',
 			    'bin/oai-listrecords',
                             'bin/oai-dump'
 			   ],
     PL_FILES		=> {},
+    SIGN		=> 0,
 );
 
 ## if they either don't have XML::SAX::ExpatXS or XML::SAX cannot locate it

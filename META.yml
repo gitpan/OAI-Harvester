@@ -4,7 +4,8 @@ author:
   - 'Ed Summers <ehs@pobox.com>'
   - 'Martin Emmerich <Martin.Emmerich@oew.de>'
 configure_requires:
-  Module::Build: 0.36
+  Module::Build: 0
+  XML::SAX: 0
 generated_by: 'Module::Build version 0.3613'
 license: perl
 meta-spec:
@@ -20,7 +21,7 @@ provides:
     file: lib/Net/OAI/GetRecord.pm
   Net::OAI::Harvester:
     file: lib/Net/OAI/Harvester.pm
-    version: 1.14
+    version: 1.14_50
   Net::OAI::Identify:
     file: lib/Net/OAI/Identify.pm
   Net::OAI::ListIdentifiers:
@@ -55,4 +56,4 @@ requires:
   perl: v5.8.0
 resources:
   license: http://dev.perl.org/licenses/
-version: 1.14
+version: 1.14_50

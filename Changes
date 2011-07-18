@@ -1,6 +1,6 @@
 Revision history for Perl extension Net::OAI::Harvester
 
-1.14bi  Wed May 18 16:29:31 CEST 2011
+1.14b   Wed May 18 16:29:31 CEST 2011
 	- Explicit fallback to XML::SAX::PurePerl if we don't get a parser
           (we know that XML::SAX::PurePerl has the required features and
           does exist): Warn about probably broken XML::SAX installation and
