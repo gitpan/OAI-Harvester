@@ -36,7 +36,9 @@ my $h = Net::OAI::Harvester->new(
 );
 isa_ok( $h, 'Net::OAI::Harvester', 'new()' );
 
-my $id = 'oai:generic.eprints.org:399';
+my $id = 'oai:eprints.dcs.warwick.ac.uk:399';
+# this will fetch < http://eprints.dcs.warwick.ac.uk/cgi/oai2?verb=GetRecord&metadataPrefix=oai_dc&identifier=oai:eprints.dcs.warwick.ac.uk:399 >
+# which hopefully exists and is an deleted record
 my $r = $h->getRecord( identifier => $id, metadataPrefix => 'oai_dc' );
 ok( ! $r->errorCode(), "errorCode()" );
 ok( ! $r->errorString(), "errorString()" );
