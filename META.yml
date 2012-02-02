@@ -21,7 +21,7 @@ provides:
     file: lib/Net/OAI/GetRecord.pm
   Net::OAI::Harvester:
     file: lib/Net/OAI/Harvester.pm
-    version: 1.14_51
+    version: 1.15
   Net::OAI::Identify:
     file: lib/Net/OAI/Identify.pm
   Net::OAI::ListIdentifiers:
@@ -56,4 +56,4 @@ requires:
   perl: v5.8.0
 resources:
   license: http://dev.perl.org/licenses/
-version: 1.14_51
+version: 1.15
