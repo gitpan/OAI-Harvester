@@ -1,4 +1,4 @@
-use Test::More tests => 4;
+use Test::More tests => 5;
 use strict;
 use warnings;
 
@@ -8,10 +8,10 @@ use_ok( 'Net::OAI::Harvester' );
 my $ua1 = LWP::UserAgent->new();
 $ua1->agent( 'FooBar' );
 
-my $h = Net::OAI::Harvester->new( 
+my $h = new_ok( "Net::OAI::Harvester" => [ 
     baseUrl	=> 'http://www.yahoo.com', 
     userAgent	=> $ua1 
-);
+]);
 
 my $ua2 = $h->userAgent();
 

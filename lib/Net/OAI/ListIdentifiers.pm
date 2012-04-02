@@ -1,8 +1,8 @@
 package Net::OAI::ListIdentifiers;
 
 use strict;
-use base qw( XML::SAX::Base );
-use base qw( Net::OAI::Base );
+use base qw( XML::SAX::Base Net::OAI::Base );
+use Carp qw ( croak );
 use Net::OAI::Record::Header;
 use File::Temp qw( tempfile );
 use IO::File;
@@ -44,13 +44,13 @@ sub next {
     my $self = shift;
 
     if ( ! $self->{ headerFileHandle } ) {
-	$self->{ headerFileHandle } = 
-	    IO::File->new( $self->{ headerFilename } )
-	    || die "unable to open temp file: ".$self->{ headerFilename };
+	$self->{ headerFileHandle } = IO::File->new( $self->{ headerFilename } )
+	    or croak "unable to open temp file: ".$self->{ headerFilename };
     }
 
     if ( $self->{ headerFileHandle }->eof() ) {
-	$self->{ headerFileHandle }->close();
+	$self->{ headerFileHandle }->close() or croak "Could not close() ".$self->{ headerFilename }
+                                                      .". File system full?";
 	return( $self->handleResumptionToken( 'listIdentifiers' ) );
     }
 
@@ -58,11 +58,13 @@ sub next {
     return( $header );
 }
 
+my $xmlns_oai = "http://www.openarchives.org/OAI/2.0/";
+
 ## SAX Handlers
 
 sub start_element {
     my ( $self, $element ) = @_;
-    if ( $element->{ Name } eq 'header' ) {
+    if ( ($element->{NamespaceURI} eq $xmlns_oai) and ($element->{ LocalName } eq 'header') ) {
 	$self->{ OLD_Handler } = $self->get_handler();
 	$self->set_handler( Net::OAI::Record::Header->new() );
     }
@@ -72,12 +74,13 @@ sub start_element {
 sub end_element {
     my ( $self, $element ) = @_;
     $self->SUPER::end_element( $element );
-    if ( $element->{ Name } eq 'header' ) {
+    return unless $element->{NamespaceURI} eq $xmlns_oai;
+    if ( $element->{ LocalName } eq 'header' ) {
 	my $header = $self->get_handler();
         Net::OAI::Harvester::debug( "committing header to object store" );
 	store_fd( $header, $self->{ headerFileHandle } );
 	$self->set_handler( $self->{ OLD_Handler } );
-    } elsif ( $element->{ Name } eq 'ListIdentifiers' ) {
+    } elsif ( $element->{ LocalName } eq 'ListIdentifiers' ) {
         Net::OAI::Harvester::debug( "finished reading identifiers" );
 	$self->{ headerFileHandle }->close();
 	$self->{ headerFileHandle } = undef;

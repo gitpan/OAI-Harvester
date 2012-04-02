@@ -52,22 +52,25 @@ sub setName {
     return( undef );
 }
 
+my $xmlns_oai = "http://www.openarchives.org/OAI/2.0/";
+
 ## SAX Handlers
 
 sub start_element {
     my ( $self, $element ) = @_;
     $self->SUPER::start_element( $element );
-    push( @{ $self->{ tagStack } }, $element->{ Name } );
+    return unless $element->{NamespaceURI} eq $xmlns_oai;
+    push( @{ $self->{ tagStack } }, $element->{ LocalName } );
 }
 
 sub end_element {
     my ( $self, $element ) = @_;
-    if ( $element->{ Name } eq 'set' ) { 
-	$self->{ specs }{ $self->{ setSpec } } = $self->{ setName };
-	$self->{ setSpec } = undef;
-	$self->{ setName } = undef;
-    }
     $self->SUPER::end_element( $element );
+    return unless $element->{NamespaceURI} eq $xmlns_oai;
+    if ( $element->{ LocalName } eq 'set' ) { 
+	$self->{ specs }{ $self->{ setSpec } } = $self->{ setName };
+	$self->{ setSpec } = $self->{ setName } = undef;
+    }
     pop( @{ $self->{ tagStack } } );
 }
 

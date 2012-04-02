@@ -7,7 +7,7 @@ use URI;
 use LWP::UserAgent;
 use XML::SAX qw( Namespaces Validation );
 use File::Temp qw( tempfile );
-use Carp qw( croak );
+use Carp qw( carp croak );
 
 use Net::OAI::Error;
 use Net::OAI::ResumptionToken;
@@ -16,12 +16,11 @@ use Net::OAI::ListMetadataFormats;
 use Net::OAI::ListIdentifiers;
 use Net::OAI::ListRecords;
 use Net::OAI::GetRecord;
-use Net::OAI::ListRecords;
 use Net::OAI::ListSets;
 use Net::OAI::Record::Header;
 use Net::OAI::Record::OAI_DC;
 
-our $VERSION = '1.15';
+our $VERSION = '1.16_01';
 our $DEBUG = 0;
 
 =head1 NAME
@@ -217,7 +216,7 @@ intersted in. For example:
     print "admin email(s): ", join( ", ", $identity->adminEmail() ), "\n";
     ...
 
-For more details see the Net::OAI::Identify documentation.
+For more details see the L<Net::OAI::Identify> documentation.
 
 =cut 
 
@@ -257,7 +256,7 @@ a particular resource identifier then you can pass in that identifier.
     print "record identifier 1234567 can be retrieved as ",
 	join( ',', $list->prefixes() ),"\n";
 
-See documentation for Net::OAI::ListMetadataFormats for more details.
+See documentation for L<Net::OAI::ListMetadataFormats> for more details.
 
 =cut
 
@@ -290,7 +289,7 @@ getRecord() is used to retrieve a single record from a repository. You must pass
 in the C<identifier> and an optional C<metadataPrefix> parameters to identify 
 the record, and the flavor of metadata you would like. Net::OAI::Harvester 
 includes a parser for OAI DublinCore, so if you do not specifiy a 
-metadataPrefix 'oai_dc' will be assumed. If you would like to drop in you own 
+metadataPrefix 'oai_dc' will be assumed. If you would like to drop in your own 
 XML::Handler for another type of metadata use the C<metadataHandler> parameter.
 
     my $record = $harvester->getRecord( 
@@ -325,7 +324,7 @@ sub getRecord {
     if ( exists( $opts{ metadataHandler } ) ) {  
 	my $package = $opts{ metadataHandler };
 	_verifyMetadataHandler( $package );
-	$metadataHandler = $package->new();
+	$metadataHandler = ref($package) ? $package : $package->new();
     } else {
 	$metadataHandler = Net::OAI::Record::OAI_DC->new();
     }
@@ -606,8 +605,7 @@ agent string, timeout, or some other feature.
 sub userAgent {
     my ( $self, $ua ) = @_;
     if ( $ua ) { 
-	croak( "userAgent() needs a valid LWP::UserAgent" ) 
-	    if ref( $ua ) ne 'LWP::UserAgent';
+	$ua->isa('LWP::UserAgent') or croak( "userAgent() needs a valid LWP::UserAgent" );
 	$self->{ userAgent } = $ua;
     }
     return( $self->{ userAgent } );
@@ -646,11 +644,26 @@ sub _get {
             errorString     => 'HTTP Level Error: ' . $response->message(),
             errorCode       => $response->code(),
             HTTPError       => $response,
+            HTTPRetryAfter  => $response->header("Retry-After") || "",
         );
 	return( 
 #	    file	    => $file, 
             error           => $error
 	);
+    }
+    if ( my $ct = $response->header("Content-Type") ) {
+        debug( "Content-type $ct in HTTP response" );
+        unless ( $ct =~ /^text\/xml(;|$)/ ) {
+            return (error => Net::OAI::Error->new(errorCode => 'xmlContentError',
+                                                errorString => 'Content-Type: text/xml is mandatory (got: $ct)!')
+                   )
+          };
+        if ( $ct =~ /; charset=(\S+)/ ) {
+            my $cs = $1;
+            return (error => Net::OAI::Error->new(errorCode => 'xmlContentError',
+                                                errorString => 'charset=UTF-8 is mandatory (got: $cs)!')
+                   ) unless $cs =~ /^utf-8/i;
+          };
     }
 
     return( 
@@ -665,19 +678,19 @@ sub _parser {
     my $parser;
     $factory->require_feature(Namespaces);
     eval { $parser = $factory->parser( Handler => $handler ) };
-    warn ref($factory)." threw an exception:\n\t$@" if $@;
+    carp ref($factory)." threw an exception:\n\t$@" if $@;
 
     if ( $parser && ref($parser) ) {
         debug( "using SAX parser " . ref($parser) . " " . $parser->VERSION );
         return $parser;
       };
 
-    warn "!!! Please check your setup of XML::SAX, especially ParserDetails.ini !!!\n";
+    carp "!!! Please check your setup of XML::SAX, especially ParserDetails.ini !!!\n";
     local($XML::SAX::ParserPackage) = "XML::SAX::PurePerl";
     eval { $parser = $factory->parser( Handler => $handler ) };
-    warn ref($factory)." threw an exception again:\n\t$@" if $@;
+    carp ref($factory)." threw an exception again:\n\t$@" if $@;
     if ( $parser && ref($parser) ) {
-        warn "Successfuly forced assignment of a parser: " . ref($parser) . " " . $parser->VERSION ."\n";
+        carp "Successfuly forced assignment of a parser: " . ref($parser) . " " . $parser->VERSION ."\n";
         return $parser;
       };
 
@@ -686,34 +699,38 @@ sub _parser {
 
 sub _xmlError {
     my $e = shift;
-    warn "caught xml parsing error: $@";
+    carp "caught xml parsing error: $@";
     $e->errorString( "XML parsing error: $@" );
     $e->errorCode( 'xmlParseError' );
 }
 
 
 sub _verifyMetadataHandler {
-    my $package = shift;
-    eval( "use $package" );
-    _fatal( "unable to locate metadataHandler $package in: " . 
-	join( "\n\t", @INC ) ) if $@; 
-    _fatal( "metadataHandler $package must inherit from XML::SAX::Base\n" )
-	if ( ! grep { 'XML::SAX::Base' } eval( '@' . $package . '::ISA' ) );
+    my $package_or_instance = shift;
+    if ( ref($package_or_instance) ) {
+        $package_or_instance->isa('XML::SAX::Base')
+            or _fatal( "metadataHandler $package_or_instance must inherit from XML::SAX::Base\n" )
+      }
+    else {
+        eval( "use $package_or_instance" );
+        _fatal( "unable to locate metadataHandler $package_or_instance in: " . 
+	    join( "\n\t", @INC ) ) if $@; 
+        _fatal( "metadataHandler $package_or_instance must inherit from XML::SAX::Base\n" )
+            if ( ! grep { 'XML::SAX::Base' } eval( '@' . $package_or_instance . '::ISA' ) );
+      }
     return( 1 );
 }
 
 
 sub debug {
+    return unless $Net::OAI::Harvester::DEBUG;
     my $msg = shift; 
-    if ( $Net::OAI::Harvester::DEBUG ) { 
-	print STDERR "oai-harvester: " . localtime() . ": $msg\n";
-    }
+    carp "oai-harvester: " . localtime() . ": $msg\n";
 }
 
 sub _fatal {
     my $msg = shift;
-    print STDERR "fatal: $msg\n\n";
-    exit( 1 );
+    croak "fatal: $msg";
 }
 
 =head1 DIAGNOSTICS
@@ -722,6 +739,9 @@ If you would like to see diagnostic information when harvesting is running
 then set Net::OAI::Harvester::DEBUG to a true value.
 
     $Net::OAI::Harvester::DEBUG = 1;
+
+
+
 
 =head1 PERFORMANCE 
 

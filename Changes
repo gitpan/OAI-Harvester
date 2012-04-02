@@ -1,5 +1,15 @@
 Revision history for Perl extension Net::OAI::Harvester
 
+1.17
+1.16_01 Mon Apr  2 23:14:35 CEST 2012
+        - Modules were not namespace aware.
+        - Add HTTPRetryAfter() method (catches HTTP Retry-After header)
+        - Check responses for Content-Type and charset before parsing
+        - Net::OAI::Header handed up (empty) header elements and other stuff
+          to the request's metadataHandler
+        - SKIP tests when HTTP errors are encountered
+
+
 1.15    Thu Feb 02 16:29:31 CEST 2011
         - one repository used for tests changed identifiers
 

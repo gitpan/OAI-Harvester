@@ -5,6 +5,8 @@ package MyHandler;
 
 use base qw( XML::SAX::Base );
 
+my $xmlns_dc = "http://purl.org/dc/elements/1.1/";
+
 sub title { 
     my $self = shift;
     return( $self->{ title } );
@@ -12,14 +14,17 @@ sub title {
 
 sub start_element {
     my ( $self, $element ) = @_; 
-    if ( $element->{ Name } eq 'dc:title' ) { 
-	$self->{ foundTitle } = 1; 
+    if ( ($element->{ NamespaceURI } eq $xmlns_dc)
+      && ($element->{ LocalName } eq 'title') ) { 
+	$self->{ foundTitle } = 1;
+	$self->{ title } = "";
     }
 }
 
 sub end_element {
     my ( $self, $element ) = @_;
-    if ( $element->{ Name } eq 'dc:title' ) {
+    if ( ($element->{ NamespaceURI } eq $xmlns_dc)
+      && ($element->{ LocalName } eq 'title') ) {
 	$self->{ foundTitle } = 0;
     }
 }

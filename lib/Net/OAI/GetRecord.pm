@@ -22,8 +22,7 @@ Net::OAI::GetRecord - The results of a GetRecord OAI-PMH verb.
 sub new {
     my ( $class, %opts ) = @_;
     my $self = bless \%opts, ref( $class ) || $class;
-    $self->{ insideHeader } = 0;
-    $self->{ insideSet } = 0;
+    $self->{ insideHeader } = $self->{ insideSet } = 0;
     $self->{ header } = undef;
     $self->{ setSpecs } = [];
     return( $self );
@@ -47,11 +46,16 @@ sub metadata {
     return( $self->{ metadata } );
 }
 
+my $xmlns_oai = "http://www.openarchives.org/OAI/2.0/";
+
 ## SAX Handlers
 
 sub start_element {
     my ( $self, $element ) = @_;
-    my $tagName = $element->{ Name };
+die "GetRecord start_element";
+    return $self->SUPER::start_element($element) unless $element->{NamespaceURI} eq $xmlns_oai;
+
+    my $tagName = $element->{ LocalName };
     if ( $tagName eq 'header' ) { 
 	$self->{ insideHeader } = 1;
 	if ( exists( $element->{ Attributes }{ '{}status' } ) ) {
@@ -65,15 +69,17 @@ sub start_element {
     }
     else {
 	$self->SUPER::start_element( $element );
-    }
-    push( @{ $self->{ tagStack } }, $element->{ Name } );
+        }
+    push( @{ $self->{ tagStack } }, $element->{ LocalName } );
 }
 
 sub end_element {
     my ( $self, $element ) = @_;
-    my $tagName = $element->{ Name };
+    return $self->SUPER::end_element($element) unless $element->{NamespaceURI} eq $xmlns_oai;
+
+    my $tagName = $element->{ LocalName };
     if ( $tagName eq 'header' ) {
-        Net:OAI::Harvester::debug( "found header" );
+	Net:OAI::Harvester::debug( "found header" );
 	my $header = Net::OAI::Record::Header->new();
 	$header->status( $self->{ headerStatus } );
 	$header->identifier( $self->{ identifier } );
@@ -81,19 +87,16 @@ sub end_element {
 	$header->sets( @{ $self->{ setSpecs } } );
 	push( @{ $self->{ headers } }, $header );
 	$self->{ insideHeader } = 0;
-	$self->{ status } = '';
-	$self->{ identifier } = '';
-	$self->{ datestamp } = '';
-	$self->{ setSpec } = '';
+	$self->{ status } = $self->{ identifier } = $self->{ datestamp } = $self->{ setSpec } = '';
 	$self->{ setSpecs } = [];
     }
     elsif ( $tagName eq 'setSpec' ) { 
-        Net::OAI::Harvester::debug( "found setSpec" );
+	Net::OAI::Harvester::debug( "found setSpec" );
 	push( @{ $self->{ setSpecs } }, $self->{ setSpec } );
 	$self->{ insideSet } = 0;
     }
     else { 
-	$self->SUPER::end_element( $element );
+        $self->SUPER::end_element( $element );
     }
     pop( @{ $self->{ tagStack } } );
 }

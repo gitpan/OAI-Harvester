@@ -1,4 +1,4 @@
-use Test::More tests=>14;
+use Test::More tests => 14;
 
 use strict;
 use warnings;
@@ -6,8 +6,7 @@ $XML::SAX::ParserPackage = $XML::SAX::ParserPackage ||= $ENV{'NOH_ParserPackage'
 
 use_ok( 'Net::OAI::Record::Header' );
 
-my $header1 = Net::OAI::Record::Header->new();
-isa_ok( $header1, 'Net::OAI::Record::Header' );
+my $header1 = new_ok('Net::OAI::Record::Header');
 
 # basic attributes
 
@@ -31,20 +30,27 @@ is( $sets1[1], 'bar', 'sets() 3' );
 
 use_ok( 'Net::OAI::Harvester' );
 
-my $h = Net::OAI::Harvester->new( 
-    baseURL => 'http://eprints.dcs.warwick.ac.uk/cgi/oai2' 
-);
-isa_ok( $h, 'Net::OAI::Harvester', 'new()' );
+my $h = new_ok('Net::OAI::Harvester' => [ baseURL => 'http://eprints.dcs.warwick.ac.uk/cgi/oai2' ]);
 
 my $id = 'oai:eprints.dcs.warwick.ac.uk:399';
 # this will fetch < http://eprints.dcs.warwick.ac.uk/cgi/oai2?verb=GetRecord&metadataPrefix=oai_dc&identifier=oai:eprints.dcs.warwick.ac.uk:399 >
 # which hopefully exists and is an deleted record
 my $r = $h->getRecord( identifier => $id, metadataPrefix => 'oai_dc' );
-ok( ! $r->errorCode(), "errorCode()" );
-ok( ! $r->errorString(), "errorString()" );
 
-my $header = $r->header();
-is( $header->identifier, $id, 'identifier()' );
-is( $header->status(), 'deleted', 'status' );
+my $HTE;
+if ( my $e = $r->HTTPError() ) {
+    $HTE = "HTTP Error ".$e->status_line;
+    $HTE .= " [Retry-After: ".$r->HTTPRetryAfter()."]" if $e->code() == 503;
+  }
 
+SKIP: {
+    skip $HTE, 4 if $HTE;
+
+    ok( ! $r->errorCode(), "errorCode()" );
+    ok( ! $r->errorString(), "errorString()" );
+
+    my $header = $r->header();
+    is( $header->identifier, $id, 'identifier()' );
+    is( $header->status(), 'deleted', 'status' );
+}
 

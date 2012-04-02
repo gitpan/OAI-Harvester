@@ -1,6 +1,7 @@
 package Net::OAI::Base;
 
 use strict;
+use Carp qw ( croak );
 
 =head1 NAME
 
@@ -84,6 +85,18 @@ sub errorString {
     return( undef );
 }
 
+=head2 HTTPRetryAfter()
+
+Returns the HTTP Retry-After header in case of HTTP level errors.
+
+=cut
+
+sub HTTPRetryAfter {
+    my ( $self ) = @_;
+    return $self->{ error }->HTTPRetryAfter();
+}
+
+
 =head2 HTTPError()
 
 Returns the HTTP::Response object in case of HTTP level errors.
@@ -92,10 +105,7 @@ Returns the HTTP::Response object in case of HTTP level errors.
 
 sub HTTPError {
     my ( $self ) = @_;
-    return undef unless $self->{ error };
-    return exists $self->{ error }->{ HTTPError }
-                ? $self->{ error }->{ HTTPError }
-                : undef;
+    return $self->{ error }->HTTPError();
 }
 
 
@@ -122,7 +132,7 @@ as XML.
 sub xml {
     my(  $self, %args ) = shift;
     return undef unless $self->{ file };    # not set eg. after HTTP error
-    open( XML, $self->{ file } ) || die "unable to open $self->{ file }";
+    open( XML, $self->{ file } ) or croak "unable to open file ".$self->{ file };
     ## slurp entire file into $xml
     local $/ = undef;
     my $xml = <XML>;
@@ -145,7 +155,7 @@ sub handleResumptionToken {
     my ( $self, $method ) = @_;
 
     my $harvester = exists( $self->{ harvester } ) ? $self->{ harvester } : 0;
-    return() if ref($harvester) ne 'Net::OAI::Harvester';
+    return() unless $harvester && $harvester->isa('Net::OAI::Harvester');
 
     my $rToken = $self->resumptionToken();
     if ( $rToken ) { 

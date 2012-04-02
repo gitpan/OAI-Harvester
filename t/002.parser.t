@@ -9,11 +9,8 @@ use_ok( 'Net::OAI::Harvester' );
 
 ## will we get a usable parser?
 
-my $h = Net::OAI::Harvester->new( 'baseURL' => 'http://www.yahoo.com' );
-isa_ok( $h, 'Net::OAI::Harvester' );
-
-my $e = Net::OAI::Error->new();
-isa_ok( $e, 'Net::OAI::Error' );
+my $h = new_ok('Net::OAI::Harvester' => [ 'baseURL' => 'http://www.yahoo.com' ]);
+my $e = new_ok('Net::OAI::Error');
 
 my $parser;
 eval { $parser = Net::OAI::Harvester::_parser($e) };
@@ -27,6 +24,7 @@ You may force a specific parser *for the tests* by providing the environment var
 NOH_ParserPackage=XML::SAX::PurePerl ./Build test
 
 XxX
+    BAIL_OUT("no decent SAX parser obtained from XML::SAX::ParserFactory");
   }
 else {
     no strict 'refs';

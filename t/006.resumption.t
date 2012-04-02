@@ -5,8 +5,7 @@ $XML::SAX::ParserPackage = $XML::SAX::ParserPackage ||= $ENV{'NOH_ParserPackage'
 
 use_ok( 'Net::OAI::ResumptionToken' );
 
-my $token = Net::OAI::ResumptionToken->new();
-isa_ok( $token, 'Net::OAI::ResumptionToken' );
+my $token = new_ok('Net::OAI::ResumptionToken');
 
 $token->expirationDate( 'May-28-1969' );
 is( $token->expirationDate(), 'May-28-1969', 'expirationDate()' );

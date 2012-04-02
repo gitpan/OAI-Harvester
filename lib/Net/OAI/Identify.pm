@@ -18,6 +18,8 @@ Net::OAI::Identify - Results of the Identify OAI-PMH verb.
 
 =cut
 
+my $xmlns_oai = "http://www.openarchives.org/OAI/2.0/";
+
 sub new {
     my ( $class, %opts ) = @_;
     my $self = bless \%opts, ref( $class ) || $class;
@@ -119,7 +121,7 @@ sub adminEmail {
     return( $self->{ adminEmails }[ 0 ] );
 }
 
-=head1 compression() {
+=head1 compression()
 
 Returns the types of compression that the archive supports. Since the 
 compression element may repeat you may get all the values by using 
@@ -140,26 +142,29 @@ sub compression {
 
 sub start_element {
     my ( $self, $element ) = @_;
-    push( @{ $self->{ tagStack } }, $element->{ Name } );
-    $self->{ insideDescription } = 1 if $element->{ Name } eq 'description';
+    return $self->SUPER::start_element($element) unless $element->{NamespaceURI} eq $xmlns_oai;  # should be error?
+
+    push( @{ $self->{ tagStack } }, $element->{ LocalName } );
+    $self->{ insideDescription } = 1 if $element->{ LocalName } eq 'description';
 }
 
 sub end_element {
     my ( $self, $element ) = @_;
+    return $self->SUPER::end_element($element) unless $element->{NamespaceURI} eq $xmlns_oai;  # should be error?
 
     ## store and reset elements that can have multiple values
-    if ( $element->{ Name } eq 'adminEmail' ) {
+    if ( $element->{ LocalName } eq 'adminEmail' ) {
         Net::OAI::Harvester::debug( "got adminEmail in Identify" );
 	push( @{ $self->{ adminEmails } }, $self->{ adminEmail } );
 	$self->{ adminEmail } = '';
     }
-    elsif ( $element->{ Name } eq 'compression' ) { 
+    elsif ( $element->{ LocalName } eq 'compression' ) { 
         Net::OAI::Harvester::debug( "got compression in Identify" );
 	push( @{ $self->{ compressions } }, $self->{ compression } );
 	$self->{ compression } = '';
     }
     pop( @{ $self->{ tagStack } } );
-    $self->{ insideDescription } = 0 if $element->{ Name } eq 'description';
+    $self->{ insideDescription } = 0 if $element->{ LocalName } eq 'description';
 }
 
 sub characters {
@@ -169,3 +174,4 @@ sub characters {
 }
 
 1;
+

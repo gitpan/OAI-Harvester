@@ -26,7 +26,7 @@ sub new {
     $self->{ insideError } = 0; 
     $self->{ errorCode } = '' if ! exists( $self->{ errorCode } );
     $self->{ errorString }  = '' if ! exists( $self->{ errorString } );
-# do not initialize $self->{ HTTPError }
+# do not initialize $self->{ HTTPError } and $self->{ HTTPRetryAfter }
     return( $self );
 }
 
@@ -73,6 +73,14 @@ noSetHierarchy
 
 xmlParseError
 
+=item 
+
+xmlContentError
+
+=item 
+
+numerical HTTP status code
+
 =back
 
 For more information about these error codes see:
@@ -113,6 +121,20 @@ sub HTTPError {
 }
 
 
+=head2 HTTPRetryAfter()
+
+In case of HTTP level errors, returns the Retry-After header of the HTTP Response object,
+or the empty string if no such header is persent. Otherwise C<undef>.
+
+
+=cut
+
+sub HTTPRetryAfter {
+    my ( $self ) = @_;
+    return exists $self->{ HTTPRetryAfter } ? $self->{ HTTPRetryAfter } : undef;
+}
+
+
 =head1 TODO
 
 =head1 SEE ALSO
@@ -135,10 +157,12 @@ sub HTTPError {
 
 ## all children of Net::OAI::Base should call this to make sure
 ## certain object properties are set
+my $xmlns_oai = "http://www.openarchives.org/OAI/2.0/";
 
 sub start_element { 
     my ( $self, $element ) = @_;
-    my $tagName = $element->{ Name };
+    return $self->SUPER::start_element($element) unless $element->{NamespaceURI} eq $xmlns_oai;  # should be error?
+    my $tagName = $element->{ LocalName };
     if ( $tagName eq 'error' ) {
 	$self->{ errorCode } = $element->{ Attributes }{ '{}code' }{ Value };
 	$self->{ insideError } = 1;
@@ -150,7 +174,8 @@ sub start_element {
 
 sub end_element {
     my ( $self, $element ) = @_;
-    my $tagName = $element->{ Name };
+    return $self->SUPER::end_element($element) unless $element->{NamespaceURI} eq $xmlns_oai;  # should be error?
+    my $tagName = $element->{ LocalName };
     if ( $tagName eq 'error' ) {
 	$self->{ insideError } = 0;
     } else {

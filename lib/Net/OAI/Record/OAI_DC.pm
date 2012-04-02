@@ -2,6 +2,7 @@ package Net::OAI::Record::OAI_DC;
 
 use strict;
 use base qw( XML::SAX::Base );
+use Carp qw( carp );
 our $VERSION = 'v1.00.0';
 
 our @OAI_DC_ELEMENTS = qw(
@@ -118,31 +119,46 @@ sub asString {
     return join("\n", @result);
 }
 
+our $xmlns_dc = "http://purl.org/dc/elements/1.1/";
+our $xmlns_oaidc = "http://www.openarchives.org/OAI/2.0/oai_dc/";
+
 ## SAX handlers
 
 sub start_element {
     my ( $self, $element ) = @_;
-    if ( $element->{ Name } eq 'metadata' ) {
-	$self->{ insideMetadata } = 1;
-    }
-    $self->{ chars } = '';
+    my $elname = $element->{ LocalName };
+    if ( ($element->{ NamespaceURI } eq $xmlns_oaidc) and ($elname eq "dc") ) {
+	$self->{ insideRecord } = 1}
+    elsif ( $element->{ NamespaceURI } ne $xmlns_dc ) {
+        carp "what is ".$element->{ Name }."?";
+        return undef;
+      }
+    elsif ( grep /$elname/, @OAI_DC_ELEMENTS ) {
+        $self->{ chars } = ""}
+    else {
+        carp "what is $elname?"}
 }
 
 sub end_element {
     my ( $self, $element ) = @_;
-    ## strip namespace from element name
-    my ( $elementName ) = ( $element->{ Name } =~ /^(?:.*:)?(.*)$/ );
-    if ( $elementName eq 'metadata' ) { 
-	$self->{ insideMetadata } = undef; 
-    }
-    if ( $self->{ insideMetadata } ) { 
-	push( @{ $self->{ $elementName } }, $self->{ chars } );
-    }
+    my $elname = $element->{ LocalName };
+
+    if ( ($element->{ NamespaceURI } eq $xmlns_oaidc) and ($elname eq "dc") ) {
+	$self->{ insideRecord } = 0}
+    elsif ( $element->{ NamespaceURI } ne $xmlns_dc ) {
+        return undef}
+    elsif ( grep /$elname/, @OAI_DC_ELEMENTS ) {   # o.k.
+        push( @{ $self->{ $elname } }, $self->{ chars } );
+        $self->{ chars } = undef;
+      }
+    elsif ( $self->{ chars } =~ /\S/ ) {
+        carp "unassigned content: ".$self->{ chars };
+      }
 }
 
 sub characters {
     my ( $self, $characters ) = @_;
-    $self->{ chars } .= $characters->{ Data };
+    $self->{ chars } .= $characters->{ Data } if $self->{ insideRecord };
 }
 
 1;

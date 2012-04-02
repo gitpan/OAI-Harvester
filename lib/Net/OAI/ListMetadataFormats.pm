@@ -78,22 +78,27 @@ sub schemas_byprefix {
     return $self->{schemas_byprefix}->{$prefix};
 }
 
+my $xmlns_oai = "http://www.openarchives.org/OAI/2.0/";
 
-## SAX Handlers
+# SAX Handlers
 
 sub start_element {
     my ( $self, $element ) = @_;
-    if ( $element->{ Name } eq 'ListMetadataFormats' ) { 
+    return $self->SUPER::start_element($element) unless $element->{NamespaceURI} eq $xmlns_oai;  # should be error?
+
+    if ( $element->{ LocalName } eq 'ListMetadataFormats' ) { 
 	$self->{ insideList } = 1;
     } else {
 	$self->SUPER::start_element( $element );
     }
-    push( @{ $self->{ tagStack } }, $element->{ Name } );
+    push( @{ $self->{ tagStack } }, $element->{ LocalName } );
 }
 
 sub end_element {
     my ( $self, $element ) = @_;
-    my $name = $element->{ Name };
+    return $self->SUPER::end_element($element) unless $element->{NamespaceURI} eq $xmlns_oai;  # should be error?
+
+    my $name = $element->{ LocalName };
     if ( $name eq 'ListMetadataFormats' ) {
 	$self->{ insideList } = 0;
     } elsif ( $name eq 'metadataFormat' ) {

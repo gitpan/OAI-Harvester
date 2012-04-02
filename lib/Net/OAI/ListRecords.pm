@@ -1,8 +1,8 @@
 package Net::OAI::ListRecords;
 
 use strict;
-use base qw( XML::SAX::Base );
-use base qw( Net::OAI::Base );
+use base qw( XML::SAX::Base Net::OAI::Base );
+use Carp qw ( croak );
 use Net::OAI::Record;
 use Net::OAI::Record::Header;
 use File::Temp qw( tempfile );
@@ -59,16 +59,16 @@ sub next {
 
     ## if we haven't opened our object store do it now
     if ( ! $self->{ recordsFileHandle } ) {
-	$self->{ recordsFileHandle } = 
-	    IO::File->new( $self->{ recordsFilename } )
-	    || die "unable to open temp file: ".$self->{ recordsFilename };
+	$self->{ recordsFileHandle } = IO::File->new( $self->{ recordsFilename } )
+	    or croak "unable to open temp file: ".$self->{ recordsFilename };
 	## we assume utf8 encoding (perhaps wrongly) 
         binmode( $self->{ recordsFileHandle }, ':utf8' );
     }
 
     ## no more data to read back from our object store then return undef
     if ( $self->{ recordsFileHandle }->eof() ) {
-	$self->{ recordsFileHandle }->close();
+	$self->{ recordsFileHandle }->close() or croak "Could not close() ".$self->{ recordsFilename }
+                                                      .". File system full?";
 	return( $self->handleResumptionToken( 'listRecords' ) );
     }
 
@@ -90,6 +90,8 @@ sub metadataHandler {
     return( $self->{ metadataHandler } );
 }
 
+my $xmlns_oai = "http://www.openarchives.org/OAI/2.0/";
+
 ## SAX Handlers
 
 sub start_element {
@@ -97,7 +99,7 @@ sub start_element {
 
     ## if we are at the start of a new record then we need an empty 
     ## metadata object to fill up 
-    if ( $element->{ Name } eq 'record' ) { 
+    if ( ($element->{NamespaceURI} eq $xmlns_oai) and ($element->{ LocalName } eq 'record') ) { 
 	## we store existing downstream handler so we can replace
 	## it after we are done retrieving the metadata record
 	$self->{ OLD_Handler } = $self->get_handler();
@@ -112,10 +114,11 @@ sub start_element {
 sub end_element {
     my ( $self, $element ) = @_;
     $self->SUPER::end_element( $element );
+    return unless $element->{NamespaceURI} eq $xmlns_oai;
 
     ## if we've got to the end of the record we need to stash
     ## away the object in our object store on disk
-    if ( $element->{ Name } eq 'record' ) {
+    if ( $element->{ LocalName } eq 'record' ) {
 
 	## we need to swap out the existing metadata handler and freeze
 	## it on disk
@@ -138,7 +141,7 @@ sub end_element {
 
     ## otherwise if we got to the end of our list we can close
     ## our object stash on disk
-    elsif ( $element->{ Name } eq 'ListRecords' ) {
+    elsif ( $element->{ LocalName } eq 'ListRecords' ) {
 	$self->{ recordsFileHandle }->close();
 	$self->{ recordsFileHandle } = undef;
     }
