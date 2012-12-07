@@ -20,6 +20,7 @@ lib/Net/OAI/ResumptionToken.pm
 Makefile.PL
 MANIFEST
 META.yml
+META.json
 README
 t/000.harvester.t
 t/001.ua.t

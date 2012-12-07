@@ -3,10 +3,12 @@ abstract: 'A package for harvesting metadata using OAI-PMH'
 author:
   - 'Ed Summers <ehs@pobox.com>'
   - 'Martin Emmerich <Martin.Emmerich@oew.de>'
+build_requires: {}
 configure_requires:
   Module::Build: 0
   XML::SAX: 0
-generated_by: 'Module::Build version 0.3613'
+dynamic_config: 1
+generated_by: 'Module::Build version 0.38, CPAN::Meta::Converter version 2.112150'
 license: perl
 meta-spec:
   url: http://module-build.sourceforge.net/META-spec-v1.4.html
@@ -15,25 +17,34 @@ name: OAI-Harvester
 provides:
   Net::OAI::Base:
     file: lib/Net/OAI/Base.pm
+    version: 0
   Net::OAI::Error:
     file: lib/Net/OAI/Error.pm
+    version: 0
   Net::OAI::GetRecord:
     file: lib/Net/OAI/GetRecord.pm
+    version: 0
   Net::OAI::Harvester:
     file: lib/Net/OAI/Harvester.pm
-    version: 1.16_01
+    version: 1.16_02
   Net::OAI::Identify:
     file: lib/Net/OAI/Identify.pm
+    version: 0
   Net::OAI::ListIdentifiers:
     file: lib/Net/OAI/ListIdentifiers.pm
+    version: 0
   Net::OAI::ListMetadataFormats:
     file: lib/Net/OAI/ListMetadataFormats.pm
+    version: 0
   Net::OAI::ListRecords:
     file: lib/Net/OAI/ListRecords.pm
+    version: 0
   Net::OAI::ListSets:
     file: lib/Net/OAI/ListSets.pm
+    version: 0
   Net::OAI::Record:
     file: lib/Net/OAI/Record.pm
+    version: 0
   Net::OAI::Record::Header:
     file: lib/Net/OAI/Record/Header.pm
     version: v1.0.0
@@ -42,6 +53,7 @@ provides:
     version: v1.0.0
   Net::OAI::ResumptionToken:
     file: lib/Net/OAI/ResumptionToken.pm
+    version: 0
 recommends:
   XML::SAX::ExpatXS: 0
 requires:
@@ -56,4 +68,4 @@ requires:
   perl: v5.8.0
 resources:
   license: http://dev.perl.org/licenses/
-version: 1.16_01
+version: 1.16_02

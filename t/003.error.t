@@ -1,4 +1,4 @@
-use Test::More tests => 6;
+use Test::More tests => 7;
 
 use strict;
 use warnings;
@@ -10,18 +10,35 @@ use_ok( 'Net::OAI::Harvester' );
 
 subtest 'Bad host' => sub {
     plan tests => 8;
-    my $h = new_ok('Net::OAI::Harvester' => [ 'baseURL' => 'http://xxx.yahoo.com' ]);
+    my $h = new_ok('Net::OAI::Harvester' => [ 'baseURL' => 'http://xxx.yyy.zzz.yahoo.com' ]);
 
     my $i = $h->identify();
     isa_ok( $i, 'Net::OAI::Identify' );
 
     my $e = $i->HTTPError();
     isa_ok ($e, 'HTTP::Response');
-    is ($e->code, 404, 'HTTP error code');
+    is ($e->code, 500, 'HTTP error code');
     is( ($e->message ? "exists" : "absent"), 'exists', 'HTTP error text');
-    like( $e->status_line, qr/^404 \S/, 'HTTP status line');
+    like( $e->status_line, qr/^500 \S/, 'HTTP status line');
     
-    is( $i->errorCode(), '404', 'Caught HTTP error ('.$i->errorCode().')' );
+    is( $i->errorCode(), $e->code, 'Caught HTTP error ('.$i->errorCode().')' );
+    like( $i->errorString(), qr/^HTTP Level Error: \S/, 'Caught HTTP error ('.$i->errorString().')' );
+};
+
+subtest 'Cannot connect' => sub {
+    plan tests => 8;
+    my $h = new_ok('Net::OAI::Harvester' => [ 'baseURL' => 'http://www.google.com:54321/' ]);
+
+    my $i = $h->identify();
+    isa_ok( $i, 'Net::OAI::Identify' );
+
+    my $e = $i->HTTPError();
+    isa_ok ($e, 'HTTP::Response');
+    like ($e->code, qr/^(404|500)/, 'HTTP error code');
+    is( ($e->message ? "exists" : "absent"), 'exists', 'HTTP error text');
+    like( $e->status_line, qr/^(404|500) \S/, 'HTTP status line');
+    
+    is( $i->errorCode(), $e->code, 'Caught HTTP error ('.$i->errorCode().')' );
     like( $i->errorString(), qr/^HTTP Level Error: \S/, 'Caught HTTP error ('.$i->errorString().')' );
 };
 
