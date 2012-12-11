@@ -7,7 +7,8 @@ $XML::SAX::ParserPackage = $XML::SAX::ParserPackage ||= $ENV{'NOH_ParserPackage'
 
 use_ok( 'Net::OAI::Harvester' );
 
-my $h = new_ok('Net::OAI::Harvester' => [ baseURL => 'http://memory.loc.gov/cgi-bin/oai2_0' ]);
+my $bu = 'http://memory.loc.gov/cgi-bin/oai2_0';
+my $h = new_ok('Net::OAI::Harvester' => [ baseURL => $bu ]);
 
 my $l = $h->listRecords( metadataPrefix => 'oai_dc', set => 'papr' );
 isa_ok( $l, 'Net::OAI::ListRecords', 'listRecords()' );
@@ -16,7 +17,7 @@ my $HTE;
 if ( my $e = $l->HTTPError() ) {
     $HTE = "HTTP Error ".$e->status_line;
     $HTE .= " [Retry-After: ".$l->HTTPRetryAfter()."]" if $e->code() == 503;
-    diag("with ", $l->BaseURL, ": ", $HTE);
+    diag("Error for $bu: ", $HTE);
   }
 
 SKIP: {
@@ -79,7 +80,7 @@ undef $HTE;
 if ( my $e = $l->HTTPError() ) {
     $HTE = "HTTP Error ".$e->status_line;
     $HTE .= " [Retry-After: ".$l->HTTPRetryAfter()."]" if $e->code() == 503;
-    diag("with ", $l->BaseURL, ": ", $HTE);
+    diag("Error for $bu: ", $HTE);
   }
 
 SKIP: {

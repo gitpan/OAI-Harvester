@@ -20,7 +20,7 @@ use Net::OAI::ListSets;
 use Net::OAI::Record::Header;
 use Net::OAI::Record::OAI_DC;
 
-our $VERSION = '1.16_02';
+our $VERSION = '1.16_03';
 our $DEBUG = 0;
 
 =head1 NAME
@@ -110,6 +110,7 @@ Storable if you are curious). The serialized objects on disk can then be
 iterated over one at a time. The benefit of this is a lower memory footprint 
 when (for example) a ListRecords verb is exercised on a repository that 
 returns 100,000 records.
+
 
 =item 2
 
@@ -754,6 +755,14 @@ are a speed freak install XML::LibXML from CPAN today.
 If you have a particular parser you want to use you can set the
 $XML::SAX::ParserPackage variable appropriately. See XML::SAX::ParserFactory
 documentation for details.
+
+
+
+=head1 ENVIRONMENT
+
+The modules use LWP for HTTP operations, thus C<PERL_LWP_ENV_PROXY> controls
+wether the "_proxy" environment settings shall be honored.
+
 
 =head1 TODO
 

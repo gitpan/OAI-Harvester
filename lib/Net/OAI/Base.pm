@@ -93,6 +93,7 @@ Returns the HTTP Retry-After header in case of HTTP level errors.
 
 sub HTTPRetryAfter {
     my ( $self ) = @_;
+    return undef unless $self->{ error };
     return $self->{ error }->HTTPRetryAfter();
 }
 

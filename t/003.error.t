@@ -15,14 +15,15 @@ subtest 'Bad host' => sub {
     my $i = $h->identify();
     isa_ok( $i, 'Net::OAI::Identify' );
 
-    my $e = $i->HTTPError();
-    isa_ok ($e, 'HTTP::Response');
-    is ($e->code, 500, 'HTTP error code');
-    is( ($e->message ? "exists" : "absent"), 'exists', 'HTTP error text');
-    like( $e->status_line, qr/^500 \S/, 'HTTP status line');
-    
-    is( $i->errorCode(), $e->code, 'Caught HTTP error ('.$i->errorCode().')' );
+    like( $i->errorCode(), qr/^50[03]$/, 'Caught HTTP error ('.$i->errorCode().')' );
     like( $i->errorString(), qr/^HTTP Level Error: \S/, 'Caught HTTP error ('.$i->errorString().')' );
+
+    my $e = $i->HTTPError();
+    isa_ok( $e, 'HTTP::Response' );
+
+    is( $e->code, $i->errorCode(), 'HTTP error code' );
+    is( ($e->message ? 'exists' : 'absent'), 'exists', 'HTTP error text' );
+    like( $e->status_line, qr/^50[03] \S/, 'HTTP status line' );
 };
 
 subtest 'Cannot connect' => sub {
@@ -32,14 +33,14 @@ subtest 'Cannot connect' => sub {
     my $i = $h->identify();
     isa_ok( $i, 'Net::OAI::Identify' );
 
-    my $e = $i->HTTPError();
-    isa_ok ($e, 'HTTP::Response');
-    like ($e->code, qr/^(404|500)/, 'HTTP error code');
-    is( ($e->message ? "exists" : "absent"), 'exists', 'HTTP error text');
-    like( $e->status_line, qr/^(404|500) \S/, 'HTTP status line');
-    
-    is( $i->errorCode(), $e->code, 'Caught HTTP error ('.$i->errorCode().')' );
+    like( $i->errorCode(), qr/^(404|50[034])/, 'Caught HTTP error ('.$i->errorCode().')' );
     like( $i->errorString(), qr/^HTTP Level Error: \S/, 'Caught HTTP error ('.$i->errorString().')' );
+
+    my $e = $i->HTTPError();
+    isa_ok( $e, 'HTTP::Response' );
+    is( $e->code, $i->errorCode(), 'HTTP error code' );
+    is( ($e->message ? 'exists' : 'absent'), 'exists', 'HTTP error text' );
+    like( $e->status_line, qr/^(404|50[034]) \S/, 'HTTP status line' );
 };
 
 subtest 'Bad URL path' => sub {
@@ -49,33 +50,35 @@ subtest 'Bad URL path' => sub {
     my $i = $h->identify();
     isa_ok( $i, 'Net::OAI::Identify' );
 
-    my $e = $i->HTTPError();
-    isa_ok ($e, 'HTTP::Response');
-    is ($e->code, 404, 'HTTP error code');
-    is( ($e->message ? "exists" : "absent"), 'exists', 'HTTP error text');
-    like( $e->status_line, qr/^404 \S/, 'HTTP status line');
-    
     is( $i->errorCode(), '404', 'Caught HTTP error ('.$i->errorCode().')' );
     like( $i->errorString(), qr/^HTTP Level Error: \S/, 'Caught HTTP error ('.$i->errorString().')' );
+
+    my $e = $i->HTTPError();
+    isa_ok( $e, 'HTTP::Response' );
+    is( $e->code, $i->errorCode(), 'HTTP error code' );
+    is( ($e->message ? 'exists' : 'absent'), 'exists', 'HTTP error text' );
+    like( $e->status_line, qr/^404 \S/, 'HTTP status line' );
 };
 
 ## XML Content or Parsing Error
 
-subtest 'content error' => sub {
-    plan tests => 4;
+subtest 'content parsing error' => sub {
+    plan tests => 3;
     my $h = new_ok('Net::OAI::Harvester' => [ 'baseURL' => 'http://www.yahoo.com' ]);
 
     my $i = $h->identify();
     isa_ok( $i, 'Net::OAI::Identify' );
 
-    is( ($i->HTTPError ? "exists" : "absent"), 'absent', 'No HTTP error response');
+    my $HTE;
+    if ( my $e = $i->HTTPError() ) {
+        $HTE = "HTTP Error ".$e->status_line;
+        $HTE .= " [Retry-After: " . $i->HTTPRetryAfter() . "]" if $e->code() == 503;
+      }
+    SKIP: {
+        skip $HTE, 1 if $HTE;
 
-# XML::LibXML::SAX does not return error codes properly
-#SKIP: {
-#   skip( 'XML::LibXML::SAX does not return errors', 1 )
-#	if ref( XML::SAX::ParserFactory->parser() ) eq 'XML::LibXML::SAX';
-    is( $i->errorCode(), 'xmlContentError', 'caught XML content error' );
-#}
+        like( $i->errorCode(), qr/^xml(Content|Parse)Error$/, 'caught XML content error' );
+      }
 };
 
 ## Missing parameter
