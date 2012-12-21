@@ -2,7 +2,7 @@ Revision history for Perl extension Net::OAI::Harvester
 
 
 1.17
-1.16_03	Fri Dec  7 09:49:03 CET 2012
+1.16_04	Fri Dec  7 09:49:03 CET 2012
 	- consider HTTP proxies in design of t/003.error.t
 	- 'Bad Host' tests failing b/c error code 500 is not the expected
 	   code 404 (due to some recent change in LWP)?

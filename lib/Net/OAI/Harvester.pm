@@ -20,7 +20,7 @@ use Net::OAI::ListSets;
 use Net::OAI::Record::Header;
 use Net::OAI::Record::OAI_DC;
 
-our $VERSION = '1.16_03';
+our $VERSION = '1.16_04';
 our $DEBUG = 0;
 
 =head1 NAME
@@ -656,13 +656,17 @@ sub _get {
         debug( "Content-type $ct in HTTP response" );
         unless ( $ct =~ /^text\/xml(;|$)/ ) {
             return (error => Net::OAI::Error->new(errorCode => 'xmlContentError',
-                                                errorString => 'Content-Type: text/xml is mandatory (got: $ct)!')
+                                                errorString => "Content-Type: text/xml is mandatory (got: $ct)!"),
+                                                  HTTPError => $response,
+                                            HTTPRetryAfter  => $response->header("Retry-After") || "",
                    )
           };
         if ( $ct =~ /; charset=(\S+)/ ) {
             my $cs = $1;
             return (error => Net::OAI::Error->new(errorCode => 'xmlContentError',
-                                                errorString => 'charset=UTF-8 is mandatory (got: $cs)!')
+                                                errorString => "charset=UTF-8 is mandatory (got: $cs)!"),
+                                                  HTTPError => $response,
+                                            HTTPRetryAfter  => $response->header("Retry-After") || "",
                    ) unless $cs =~ /^utf-8/i;
           };
     }

@@ -53,7 +53,7 @@
       },
       "Net::OAI::Harvester" : {
          "file" : "lib/Net/OAI/Harvester.pm",
-         "version" : "1.16_03"
+         "version" : "1.16_04"
       },
       "Net::OAI::Identify" : {
          "file" : "lib/Net/OAI/Identify.pm",
@@ -98,5 +98,5 @@
          "http://dev.perl.org/licenses/"
       ]
    },
-   "version" : "1.16_03"
+   "version" : "1.16_04"
 }
