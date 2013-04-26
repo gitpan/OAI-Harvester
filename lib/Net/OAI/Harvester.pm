@@ -20,7 +20,7 @@ use Net::OAI::ListSets;
 use Net::OAI::Record::Header;
 use Net::OAI::Record::OAI_DC;
 
-our $VERSION = '1.16_04';
+our $VERSION = '1.16_05';
 our $DEBUG = 0;
 
 =head1 NAME

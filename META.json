@@ -5,7 +5,7 @@
       "Martin Emmerich <Martin.Emmerich@oew.de>"
    ],
    "dynamic_config" : 1,
-   "generated_by" : "Module::Build version 0.38, CPAN::Meta::Converter version 2.112150",
+   "generated_by" : "Module::Build version 0.38, CPAN::Meta::Converter version 2.110440",
    "license" : [
       "perl_5"
    ],
@@ -53,7 +53,7 @@
       },
       "Net::OAI::Harvester" : {
          "file" : "lib/Net/OAI/Harvester.pm",
-         "version" : "1.16_04"
+         "version" : "1.16_05"
       },
       "Net::OAI::Identify" : {
          "file" : "lib/Net/OAI/Identify.pm",
@@ -98,5 +98,5 @@
          "http://dev.perl.org/licenses/"
       ]
    },
-   "version" : "1.16_04"
+   "version" : "1.16_05"
 }

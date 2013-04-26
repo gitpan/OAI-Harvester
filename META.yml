@@ -8,7 +8,7 @@ configure_requires:
   Module::Build: 0
   XML::SAX: 0
 dynamic_config: 1
-generated_by: 'Module::Build version 0.38, CPAN::Meta::Converter version 2.112150'
+generated_by: 'Module::Build version 0.38, CPAN::Meta::Converter version 2.110440'
 license: perl
 meta-spec:
   url: http://module-build.sourceforge.net/META-spec-v1.4.html
@@ -26,7 +26,7 @@ provides:
     version: 0
   Net::OAI::Harvester:
     file: lib/Net/OAI/Harvester.pm
-    version: 1.16_04
+    version: 1.16_05
   Net::OAI::Identify:
     file: lib/Net/OAI/Identify.pm
     version: 0
@@ -68,4 +68,4 @@ requires:
   perl: v5.8.0
 resources:
   license: http://dev.perl.org/licenses/
-version: 1.16_04
+version: 1.16_05
