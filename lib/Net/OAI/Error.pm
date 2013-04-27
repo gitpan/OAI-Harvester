@@ -13,6 +13,9 @@ Net::OAI::Error - OAI-PMH errors.
 
 =head1 DESCRIPTION
 
+Note: Actually this is a filter which actually processes all top-level
+OAI-PMH elements.
+
 =head1 METHODS
 
 =head2 new()
@@ -23,7 +26,6 @@ sub new {
     my ( $class, %opts ) = @_;
     my $self = bless \%opts, ref( $class ) || $class;
     $self->{ tagStack } = [];
-    $self->{ insideError } = 0; 
     $self->{ errorCode } = '' if ! exists( $self->{ errorCode } );
     $self->{ errorString }  = '' if ! exists( $self->{ errorString } );
 # do not initialize $self->{ HTTPError } and $self->{ HTTPRetryAfter }
@@ -162,11 +164,25 @@ my $xmlns_oai = "http://www.openarchives.org/OAI/2.0/";
 sub start_element { 
     my ( $self, $element ) = @_;
     return $self->SUPER::start_element($element) unless $element->{NamespaceURI} eq $xmlns_oai;  # should be error?
+
     my $tagName = $element->{ LocalName };
-    if ( $tagName eq 'error' ) {
-	$self->{ errorCode } = $element->{ Attributes }{ '{}code' }{ Value };
-	$self->{ insideError } = 1;
+    if ( $tagName eq 'request' ) {
+        Net::OAI::Harvester::debug( "caught request" );
+	$self->{ _requestAttrs } = {};
+        foreach ( values %{$element->{ Attributes }} ) {
+            next if $_->{ Prefix };
+            $self->{ _requestAttrs }->{ $_->{ Name } } = $_->{ Value };
+          }
+	$self->{ _insideError } = "";
+      }
+    elsif ( $tagName eq 'responseDate' ) {
+        Net::OAI::Harvester::debug( "caught responseDate" );
+	$self->{ _insideError } = "";
+      }
+    elsif ( $tagName eq 'error' ) {
         Net::OAI::Harvester::debug( "caught error" );
+	$self->{ errorCode } = $element->{ Attributes }{ '{}code' }{ Value };
+	$self->{ _insideError } = "";
     } else { 
 	$self->SUPER::start_element( $element );
     }
@@ -176,8 +192,17 @@ sub end_element {
     my ( $self, $element ) = @_;
     return $self->SUPER::end_element($element) unless $element->{NamespaceURI} eq $xmlns_oai;  # should be error?
     my $tagName = $element->{ LocalName };
-    if ( $tagName eq 'error' ) {
-	$self->{ insideError } = 0;
+    if ( $tagName eq 'request' ) {
+	$self->{ _requestContent } = $self->{ _insideError };
+	delete $self->{ _insideError };
+      }
+    elsif ( $tagName eq 'responseDate' ) {
+	$self->{ _responseDate } = $self->{ _insideError };
+	delete $self->{ _insideError };
+      }
+    elsif ( $tagName eq 'error' ) {
+	$self->{ errorString } = $self->{ _insideError };
+	delete $self->{ _insideError };
     } else {
 	$self->SUPER::end_element( $element );
     }
@@ -185,8 +210,8 @@ sub end_element {
 
 sub characters {
     my ( $self, $characters ) = @_;
-    if ( $self->{ insideError } ) { 
-	$self->{ errorString } .= $characters->{ Data };
+    if ( exists $self->{ _insideError } ) { 
+	$self->{ _insideError } .= $characters->{ Data };
     } else { 
 	$self->SUPER::characters( $characters );
     }

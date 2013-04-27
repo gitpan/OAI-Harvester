@@ -1,4 +1,4 @@
-use Test::More tests => 13;
+use Test::More tests => 14;
 
 use strict;
 use warnings;
@@ -7,8 +7,8 @@ $XML::SAX::ParserPackage = $XML::SAX::ParserPackage ||= $ENV{'NOH_ParserPackage'
 
 use_ok( 'Net::OAI::Harvester' );
 
-my $bu = 'http://memory.loc.gov/cgi-bin/oai2_0';
-my $h = new_ok('Net::OAI::Harvester' => [ baseURL => $bu ]);
+my $url = 'http://memory.loc.gov/cgi-bin/oai2_0';
+my $h = new_ok('Net::OAI::Harvester' => [ baseURL => $url ]);
 
 my $l = $h->listRecords( metadataPrefix => 'oai_dc', set => 'papr' );
 isa_ok( $l, 'Net::OAI::ListRecords', 'listRecords()' );
@@ -17,14 +17,24 @@ my $HTE;
 if ( my $e = $l->HTTPError() ) {
     $HTE = "HTTP Error ".$e->status_line;
     $HTE .= " [Retry-After: ".$l->HTTPRetryAfter()."]" if $e->code() == 503;
-    diag("Error for $bu: ", $HTE);
+    diag("Error for $url: ", $HTE);
   }
 
 SKIP: {
-    skip $HTE, 8 if $HTE;
+    skip $HTE, 9 if $HTE;
 
     ok( ! $l->errorCode(), 'errorCode()' );
     ok( ! $l->errorString(), 'errorString()' );
+
+    subtest 'OAI request/response' => sub {
+        plan tests => 5;
+        like($l->responseDate(), qr/^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\dZ$/, 'OAI responseDate element' );
+        my ($lt, %la) = $l->request();
+        is($lt, $url, 'OAI response element text' );
+        is($la{ verb }, 'ListRecords', 'OAI verb' );
+        is($la{ metadataPrefix }, 'oai_dc', 'OAI metadata Prefix' );
+        is($la{ set }, 'papr', 'OAI set' );
+      };
 
     subtest 'Collect Result' => sub {
 
@@ -80,7 +90,7 @@ undef $HTE;
 if ( my $e = $l->HTTPError() ) {
     $HTE = "HTTP Error ".$e->status_line;
     $HTE .= " [Retry-After: ".$l->HTTPRetryAfter()."]" if $e->code() == 503;
-    diag("Error for $bu: ", $HTE);
+    diag("Error for $url: ", $HTE);
   }
 
 SKIP: {

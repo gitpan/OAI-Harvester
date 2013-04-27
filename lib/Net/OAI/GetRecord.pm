@@ -52,7 +52,6 @@ my $xmlns_oai = "http://www.openarchives.org/OAI/2.0/";
 
 sub start_element {
     my ( $self, $element ) = @_;
-die "GetRecord start_element";
     return $self->SUPER::start_element($element) unless $element->{NamespaceURI} eq $xmlns_oai;
 
     my $tagName = $element->{ LocalName };

@@ -1,4 +1,4 @@
-use Test::More tests => 18; 
+use Test::More tests => 19; 
 
 use strict;
 use warnings;
@@ -6,7 +6,8 @@ $XML::SAX::ParserPackage = $XML::SAX::ParserPackage ||= $ENV{'NOH_ParserPackage'
 
 use_ok( 'Net::OAI::Harvester' );
 
-my $h = new_ok('Net::OAI::Harvester' => [ baseURL => 'http://memory.loc.gov/cgi-bin/oai2_0' ]);
+my $url = 'http://memory.loc.gov/cgi-bin/oai2_0';
+my $h = new_ok('Net::OAI::Harvester' => [ baseURL => $url ]);
 
 ## get a known ID (this may have to change over time)
 
@@ -20,10 +21,20 @@ if ( my $e = $r->HTTPError() ) {
   }
 
 SKIP: {
-    skip $HTE, 5 if $HTE;
+    skip $HTE, 6 if $HTE;
 
     ok( ! $r->errorCode(), "errorCode()" );
     ok( ! $r->errorString(), "errorString()" );
+
+    subtest 'OAI request/response' => sub {
+        plan tests => 5;
+        like($r->responseDate(), qr/^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\dZ$/, 'OAI responseDate element' );
+        my ($rt, %ra) = $r->request();
+        is($rt, $url, 'OAI response element text' );
+        is($ra{ verb }, 'GetRecord', 'OAI verb' );
+        is($ra{ metadataPrefix }, 'oai_dc', 'OAI metadata Prefix' );
+        is($ra{ identifier }, $id, 'OAI identifier' );
+     };
 
     my $header = $r->header();
     is( $header->identifier, $id, 'identifier()' );

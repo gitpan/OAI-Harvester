@@ -1,4 +1,4 @@
-use Test::More tests => 12;
+use Test::More tests => 13;
 
 use strict;
 use warnings;
@@ -6,7 +6,8 @@ $XML::SAX::ParserPackage = $XML::SAX::ParserPackage ||= $ENV{'NOH_ParserPackage'
 
 use_ok( 'Net::OAI::Harvester' );
 
-my $h = new_ok('Net::OAI::Harvester' => [ baseURL => 'http://memory.loc.gov/cgi-bin/oai2_0' ]);
+my $url = 'http://memory.loc.gov/cgi-bin/oai2_0';
+my $h = new_ok('Net::OAI::Harvester' => [ baseURL => $url ]);
 
 my $l = $h->listIdentifiers( metadataPrefix => 'mods' );
 isa_ok( $l, 'Net::OAI::ListIdentifiers', 'listIdentifiers()' );
@@ -18,10 +19,19 @@ if ( my $e = $l->HTTPError() ) {
   }
 
 SKIP: {
-    skip $HTE, 8 if $HTE;
+    skip $HTE, 9 if $HTE;
 
     ok( ! $l->errorCode(), 'errorCode()' );
     ok( ! $l->errorString(), 'errorString()' );
+
+    subtest 'OAI request/response' => sub {
+        plan tests => 4;
+        like($l->responseDate(), qr/^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\dZ$/, 'OAI responseDate element' );
+        my ($lt, %la) = $l->request();
+        is($lt, $url, 'OAI response element text' );
+        is($la{ verb }, 'ListIdentifiers', 'OAI verb' );
+        is($la{ metadataPrefix }, 'mods', 'OAI metadata Prefix' );
+      };
 
     subtest 'Collect Headers' => sub {
         while( my $h = $l->next() ) {

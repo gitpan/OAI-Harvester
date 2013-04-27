@@ -13,7 +13,7 @@ Net::OAI::Base - A base class for all OAI-PMH responses
 	...
     }
 
-    if ( $object->errorCode() ) { 
+    if ( $object->error() ) { 
 	print "verb action resulted in error code:" . $object->errorCode() . 
 	    " message:" . $object->errorString() . "\n";
     }
@@ -57,6 +57,77 @@ Net::OAI::ListSets
 
 =head1 METHODS
 
+=head2 responseDate()
+
+Returns the content of the mandatory responseDate element.
+
+=cut
+
+sub responseDate {
+    my $self = shift;
+    return ($self->{ responseDate }->[0] || undef) if exists $self->{ responseDate };
+    return ($self->{ error }->{ _responseDate } || undef) if exists $self->{ error }->{ _responseDate };
+    return undef;
+}
+
+
+=head2 request()
+
+In scalar context this method returns just the base URL (text content)
+of the mandatory OAI request element.
+
+ $requestText = $OAI->request();
+
+In array context a hash with the delivered attributes of the OAI request
+element (mirroring the valid query parameters) is appended.
+
+  my ($requestURI, %requestParams) = $OAI->request();
+  print STDERR "Repository URL: ", $requestURI, "\n";
+  print STDERR "verb was: ", $requestParams->{'verb'}, "\n";
+
+Returns C<undef> / C<()> if the OAI response could not be parsed or did not 
+contain the mandatory response element.
+
+=cut
+
+sub request {
+    my $self = shift;
+    if ( wantarray () ) {
+        if ( exists $self->{ requestContent } ) {
+            return $self->{ requestContent }->[0] || "", %{$self->{ requestAttrs }->[0]}}
+        elsif ( exists $self->{ error }->{ _requestContent } ) {
+            return $self->{ error }->{ _requestContent } || "", %{$self->{ error }->{ _requestAttrs }}}
+        else {
+            return ();
+        }
+    }
+    else {
+        if ( exists $self->{ requestContent } ) {
+            return $self->{ requestContent }->[0] || ""}
+        elsif ( exists $self->{ error }->{ _requestContent } ) {
+            return $self->{ error }->{ _requestContent } || ""}
+        else {
+            return undef;
+        }
+    }
+}
+
+
+=head2 is_error()
+
+Returns -1 for HTTP or XML errors, 1 for OAI error respones, 0 for no errors;
+
+=cut
+
+sub is_error {
+    my $self = shift;
+    return undef unless exists $self->{ error };
+    return 0 unless my $c = $self->{ error }->errorCode();
+    return -1 if $self->{ error }->HTTPError();
+    return -1 if $c =~ /^xml/;
+    return 1;
+}
+
 =head2 errorCode()
 
 Returns an error code associated with the verb result.
@@ -65,7 +136,7 @@ Returns an error code associated with the verb result.
 
 sub errorCode {
     my $self = shift;
-    if ( $self->{ error } ) { 
+    if ( $self->{ error }->errorCode() ) { 
 	return( $self->{ error }->errorCode() );
     }
     return( undef );
@@ -79,7 +150,7 @@ Returns an error message associated with an error code.
 
 sub errorString {
     my $self = shift;
-    if ( $self->{ error } ) {
+    if ( $self->{ error }->errorCode() ) {
 	return( $self->{ error }->errorString() );
     }
     return( undef );
@@ -151,6 +222,7 @@ sub file {
     my $self = shift;
     return( $self->{ file } );
 }
+
 
 sub handleResumptionToken {
     my ( $self, $method ) = @_;

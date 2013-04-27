@@ -20,7 +20,7 @@ use Net::OAI::ListSets;
 use Net::OAI::Record::Header;
 use Net::OAI::Record::OAI_DC;
 
-our $VERSION = '1.16_05';
+our $VERSION = '1.16_06';
 our $DEBUG = 0;
 
 =head1 NAME
@@ -227,7 +227,7 @@ sub identify {
     $uri->query_form( 'verb' => 'Identify' );
 
     my $identity = Net::OAI::Identify->new( $self->_get( $uri ) );
-    return $identity if $identity->errorCode();
+    return $identity if $identity->{ error };
 
     my $token = Net::OAI::ResumptionToken->new( Handler => $identity );
     my $error = Net::OAI::Error->new( Handler => $token );
@@ -271,7 +271,7 @@ sub listMetadataFormats {
     $uri->query_form( %pairs );
 
     my $list = Net::OAI::ListMetadataFormats->new( $self->_get( $uri ) );
-    return $list if $list->errorCode();
+    return $list if $list->{ error };
 
     my $token = Net::OAI::ResumptionToken->new( Handler => $list );
     my $error = Net::OAI::Error->new( Handler => $token );
@@ -338,7 +338,7 @@ sub getRecord {
     );
 
     my $record = Net::OAI::GetRecord->new( $self->_get( $uri ) );
-    return $record if $record->errorCode();
+    return $record if $record->{ error };
 
     my $header = Net::OAI::Record::Header->new( Handler => $metadataHandler );
     my $error = Net::OAI::Error->new( Handler => $header );
@@ -438,7 +438,7 @@ sub listRecords {
 
     my $list = Net::OAI::ListRecords->new( $self->_get( $uri ), 
 	metadataHandler => $opts{ metadataHandler } );
-    return $list if $list->errorCode();
+    return $list if $list->{ error };
 
     my $token = Net::OAI::ResumptionToken->new( Handler => $list );
     my $error = Net::OAI::Error->new( Handler => $token );
@@ -507,7 +507,7 @@ sub listIdentifiers {
     $uri->query_form( %pairs );
 
     my $list = Net::OAI::ListIdentifiers->new( $self->_get( $uri ) );
-    return( $list ) if $list->errorCode();
+    return( $list ) if $list->{ error };
 
     my $token = Net::OAI::ResumptionToken->new( Handler => $list );
     my $error = Net::OAI::Error->new( Handler => $token );
@@ -559,7 +559,7 @@ sub listSets {
     $uri->query_form( %pairs );
 
     my $list = Net::OAI::ListSets->new( $self->_get( $uri ) );
-    return( $list ) if $list->errorCode();
+    return( $list ) if $list->{ error };
 
     my $token = Net::OAI::ResumptionToken->new( Handler => $list );
     my $error = Net::OAI::Error->new( Handler => $token );

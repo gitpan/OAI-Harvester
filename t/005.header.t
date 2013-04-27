@@ -1,4 +1,4 @@
-use Test::More tests => 14;
+use Test::More tests => 15;
 
 use strict;
 use warnings;
@@ -30,9 +30,11 @@ is( $sets1[1], 'bar', 'sets() 3' );
 
 use_ok( 'Net::OAI::Harvester' );
 
-my $h = new_ok('Net::OAI::Harvester' => [ baseURL => 'http://eprints.dcs.warwick.ac.uk/cgi/oai2' ]);
-
 my $id = 'oai:eprints.dcs.warwick.ac.uk:399';
+my $url = 'http://eprints.dcs.warwick.ac.uk/cgi/oai2';
+
+my $h = new_ok('Net::OAI::Harvester' => [ baseURL => $url ]);
+
 # this will fetch < http://eprints.dcs.warwick.ac.uk/cgi/oai2?verb=GetRecord&metadataPrefix=oai_dc&identifier=oai:eprints.dcs.warwick.ac.uk:399 >
 # which hopefully exists and is an deleted record
 my $r = $h->getRecord( identifier => $id, metadataPrefix => 'oai_dc' );
@@ -44,10 +46,21 @@ if ( my $e = $r->HTTPError() ) {
   }
 
 SKIP: {
-    skip $HTE, 4 if $HTE;
+    skip $HTE, 5 if $HTE;
 
     ok( ! $r->errorCode(), "errorCode()" );
     ok( ! $r->errorString(), "errorString()" );
+
+    subtest 'OAI request/response' => sub {
+        plan tests => 5;
+        like($r->responseDate(), qr/^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\dZ$/, 'OAI responseDate element' );
+
+        is($r->request(), $url, 'scalar OAI response element text' );
+        my ($rr, %ra) = $r->request();
+        is($rr, $url, 'OAI response element text' );
+        is($ra{ verb }, 'GetRecord', 'OAI verb' );
+        is($ra{ identifier }, $id, 'OAI identifier' );
+      };
 
     my $header = $r->header();
     is( $header->identifier, $id, 'identifier()' );

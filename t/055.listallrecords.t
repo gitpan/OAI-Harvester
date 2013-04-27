@@ -1,4 +1,4 @@
-use Test::More tests => 5; 
+use Test::More tests => 6; 
 
 use strict;
 use warnings;
@@ -6,7 +6,8 @@ $XML::SAX::ParserPackage = $XML::SAX::ParserPackage ||= $ENV{'NOH_ParserPackage'
 
 use_ok( 'Net::OAI::Harvester' );
 
-my $h = new_ok('Net::OAI::Harvester' => [ baseURL => 'http://memory.loc.gov/cgi-bin/oai2_0' ]);
+my $url = 'http://memory.loc.gov/cgi-bin/oai2_0';
+my $h = new_ok('Net::OAI::Harvester' => [ baseURL => $url ]);
 
 my $l = $h->listAllRecords(
     'metadataPrefix'	=> 'oai_dc',
@@ -20,7 +21,17 @@ if ( my $e = $l->HTTPError() ) {
   }
 
 SKIP: {
-    skip $HTE, 3 if $HTE;
+    skip $HTE, 4 if $HTE;
+
+    subtest 'OAI request/response' => sub {
+        plan tests => 5;
+        like($l->responseDate(), qr/^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\dZ$/, 'OAI responseDate element' );
+        my ($lt, %la) = $l->request();
+        is($lt, $url, 'OAI response element text' );
+        is($la{ verb }, 'ListRecords', 'OAI verb' );
+        is($la{ metadataPrefix }, 'oai_dc', 'OAI metadata Prefix' );
+        is($la{ set }, 'lcposters', 'OAI set' );
+      };
 
     my $token = $l->resumptionToken();
     isa_ok( $token, 'Net::OAI::ResumptionToken' );

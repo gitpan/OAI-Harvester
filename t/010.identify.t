@@ -1,4 +1,4 @@
-use Test::More tests => 14;
+use Test::More tests => 15;
 
 use strict;
 use warnings;
@@ -8,7 +8,8 @@ use_ok( 'Net::OAI::Harvester' );
 
 ## a good call
 
-my $h = new_ok('Net::OAI::Harvester' => [ baseURL => 'http://memory.loc.gov/cgi-bin/oai2_0' ]);
+my $url = 'http://memory.loc.gov/cgi-bin/oai2_0';
+my $h = new_ok('Net::OAI::Harvester' => [ baseURL => $url ]);
 
 my $i = $h->identify();
 isa_ok( $i, 'Net::OAI::Identify', 'identity()' );
@@ -20,10 +21,18 @@ if ( my $e = $i->HTTPError() ) {
   }
 
 SKIP: {
-    skip $HTE, 9 if $HTE;
+    skip $HTE, 10 if $HTE;
 
     ok( ! $i->errorCode(), 'errorCode()' );
     ok( ! $i->errorString(), 'errorString()' );
+
+    subtest 'OAI request/response' => sub {
+        plan tests => 3;
+        like($i->responseDate(), qr/^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\dZ$/, 'OAI responseDate element' );
+        my ($it, %ia) = $i->request();
+        is($it, $url, 'OAI response element text' );
+        is($ia{ verb }, 'Identify', 'OAI verb' );
+      };
 
     like( $i->repositoryName(), qr/Library of Congress/, 'repositoryName()');
     like( $i->protocolVersion(), qr/^2\.0$/, 'protocolVersion()' );
