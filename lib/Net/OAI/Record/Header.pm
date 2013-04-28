@@ -24,7 +24,7 @@ sub new {
     my $self = bless \%opts, ref( $class ) || $class;
     $self->{ status } = $self->{ identifier } = $self->{ datestamp } = '';
     $self->{ sets } = [];
-    $self->{ insideHeader } = $self->{ insideSet } = $self->{ insideMetadata } = 0;
+    $self->{ _insideHeader } = $self->{ _insideMetadata } = $self->{ _insideAbout } = 0;
     return( $self );
 }
 
@@ -76,58 +76,65 @@ sub start_element {
     my ( $self, $element ) = @_;
     return $self->SUPER::start_element($element) unless $element->{NamespaceURI} eq $xmlns_oai;
 
-    if ( $element->{ LocalName } eq 'record' ) { 
-	$self->{ insideHeader } = $self->{ insideSet } = $self->{ insideMetadata } = 0}
-    elsif ( $element->{ LocalName } eq 'header' ) { 
-	$self->{ insideHeader } = 1;
-	if ( exists( $element->{ Attributes }{ '{}status' } ) ) {
-	    $self->{ headerStatus } = 
-                $element->{ Attributes }{ '{}status' }{ Value };
-	} else {
-	    $self->{ headerStatus } = '';
-	}
+    my $tagName = $element->{ LocalName };
+    push( @{$self->{ tagStack }}, $tagName );
+    if ( $tagName eq 'record' ) { 
+	$self->{ _insideHeader } = $self->{ _insideMetadata } = $self->{ _insideAbout } = 0}
+    elsif ( $tagName eq 'header' ) { 
+	$self->{ _insideHeader } = 1;
+        $self->{ headerStatus } = ( exists $element->{ Attributes }{ '{}status' } )
+                                ? $element->{ Attributes }{ '{}status' }{ Value }
+                                : "";
     }
-    elsif ( $element->{ LocalName } eq 'setSpec' ) {
-	$self->{ insideSet } = 1;
+    elsif ( $self->{ _insideHeader } ) {
     }
-    elsif ( $element->{ LocalName } eq 'metadata' ) {
-	$self->{ insideMetadata } = 1;
+    elsif ( $tagName eq 'metadata' ) {
+	$self->{ _insideMetadata } = 1;
     }
-#    elsif ( $self->{ insideMetadata } ) {
-#	$self->SUPER::start_element( $element );
-#    }
-    push( @{ $self->{ tagStack } }, $element->{ LocalName } );
+    elsif ( $tagName eq 'about' ) {
+	$self->{ _insideAbout } = 1;
+    }
+    else {
+        return $self->SUPER::start_element($element);
+    };
 }
 
 sub end_element {
     my ( $self, $element ) = @_;
     return $self->SUPER::end_element($element) unless $element->{NamespaceURI} eq $xmlns_oai;
 
+    pop( @{$self->{ tagStack }} );
     my $tagName = $element->{ LocalName };
-
     if ( $tagName eq 'header' ) {
-	$self->{ insideHeader } = 0;
-        ($self->{header} =~ /\S/) && carp "Excess content in record header: ".$self->{ header };
+	$self->{ _insideHeader } = 0;
+        (defined $self->{header}) && ($self->{header} =~ /\S/) && carp "Excess content in record header: ".$self->{ header };
     }
     elsif ( $tagName eq 'setSpec' ) { 
 	push( @{ $self->{ sets } }, $self->{ setSpec } );
-	$self->{ insideSet } = 0;
     }
-    elsif ( $element->{ LocalName } eq 'metadata' ) {
-	$self->{ insideMetadata } = 0;
+    elsif ( $tagName eq 'metadata' ) {
+	$self->{ _insideMetadata } = 0;
     }
-#    elsif ( $self->{ insideMetadata } ) {
-#	$self->SUPER::end_element( $element );
-#   }
-    pop( @{ $self->{ tagStack } } );
+    elsif ( $tagName eq 'about' ) {
+#	push( @{ $self->{ sets } }, $self->{ setSpec } );
+	$self->{ _insideAbout } = 0;
+    }
+    elsif ( $self->{ _insideHeader } ) {
+    }
+    else {
+        return $self->SUPER::end_element( $element );
+    };
 }
+
 
 sub characters {
     my ( $self, $characters ) = @_;
-    if ( $self->{ insideHeader } ) { 
+    if ( $self->{ _insideHeader } ) { 
 	$self->{ $self->{ tagStack }[-1] } .= $characters->{ Data }}
-    elsif ( $self->{ insideMetadata } ) { 
-	$self->SUPER::characters( $characters )}
+    elsif ( $self->{ _insideMetadata } ) { 
+        $self->SUPER::characters( $characters )}
+#   elsif ( $self->{ _insideAbout } ) { 
+#       $self->SUPER::characters( $characters )}
 }
 
 1;

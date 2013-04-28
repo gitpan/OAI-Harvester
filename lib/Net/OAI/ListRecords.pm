@@ -97,9 +97,11 @@ my $xmlns_oai = "http://www.openarchives.org/OAI/2.0/";
 sub start_element {
     my ( $self, $element ) = @_;
 
+    return $self->SUPER::start_element($element) unless $element->{NamespaceURI} eq $xmlns_oai;
+
     ## if we are at the start of a new record then we need an empty 
     ## metadata object to fill up 
-    if ( ($element->{NamespaceURI} eq $xmlns_oai) and ($element->{ LocalName } eq 'record') ) { 
+    if ( ($element->{ LocalName } eq 'record') ) { 
 	## we store existing downstream handler so we can replace
 	## it after we are done retrieving the metadata record
 	$self->{ OLD_Handler } = $self->get_handler();
@@ -108,11 +110,12 @@ sub start_element {
 	);
 	$self->set_handler( $header );
     }
-    $self->SUPER::start_element( $element );
+    return $self->SUPER::start_element( $element );
 }
 
 sub end_element {
     my ( $self, $element ) = @_;
+
     $self->SUPER::end_element( $element );
     return unless $element->{NamespaceURI} eq $xmlns_oai;
 

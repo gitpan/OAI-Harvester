@@ -20,7 +20,7 @@ use Net::OAI::ListSets;
 use Net::OAI::Record::Header;
 use Net::OAI::Record::OAI_DC;
 
-our $VERSION = '1.16_06';
+our $VERSION = '1.16_07';
 our $DEBUG = 0;
 
 =head1 NAME
@@ -235,7 +235,9 @@ sub identify {
     debug( "parsing Identify response " .  $identity->file() );
     eval { $parser->parse_uri( $identity->file() ) };
     if ( $@ ) {_xmlError( $error ); } 
+    $token->set_handler( undef );
     $identity->{ token } = $token->token() ? $token : undef;
+    $error->set_handler( undef );
     $identity->{ error } = $error;
     return( $identity );
 }
@@ -279,7 +281,9 @@ sub listMetadataFormats {
     debug( "parsing ListMetadataFormats response: ".$list->file() );
     eval{ $parser->parse_uri( $list->file() ) };
     if ( $@ ) { _xmlError( $error ); } 
+    $token->set_handler( undef );
     $list->{ token } = $token->token() ? $token : undef;
+    $error->set_handler( undef );
     $list->{ error } = $error;
     return( $list );
 }
@@ -337,19 +341,18 @@ sub getRecord {
 	metadataPrefix	=> $opts{ 'metadataPrefix' }
     );
 
-    my $record = Net::OAI::GetRecord->new( $self->_get( $uri ) );
+    my $record = Net::OAI::GetRecord->new( $self->_get( $uri ), 
+	metadataHandler => $opts{ metadataHandler } );
     return $record if $record->{ error };
 
-    my $header = Net::OAI::Record::Header->new( Handler => $metadataHandler );
-    my $error = Net::OAI::Error->new( Handler => $header );
+    my $error = Net::OAI::Error->new( Handler => $record );
     my $parser = _parser( $error ); 
     debug( "parsing GetRecord response " . $record->file() );
     $parser->parse_uri( $record->file() );
     if ( $@ ) { _xmlError( $error ); } 
 
+    $error->set_handler( undef );
     $record->{ error } = $error;
-    $record->{ metadata } = $metadataHandler;
-    $record->{ header } = $header;
     return( $record );
 
 }
@@ -447,8 +450,10 @@ sub listRecords {
     eval { $parser->parse_uri( $list->file() ) };
     if ( $@ ) { _xmlError( $error ); } 
 
-    $list->{ error } = $error;
+    $token->set_handler( undef );
     $list->{ token } = $token->token() ? $token : undef;
+    $error->set_handler( undef );
+    $list->{ error } = $error;
     return( $list );
 }
 
@@ -515,7 +520,10 @@ sub listIdentifiers {
     debug( "parsing ListIdentifiers response " . $list->file() );
     eval { $parser->parse_uri( $list->file() ) };
     if ( $@ ) { _xmlError( $error ); } 
+
+    $token->set_handler( undef );
     $list->{ token } = $token->token() ? $token : undef; 
+    $error->set_handler( undef );
     $list->{ error } = $error;
     return( $list );
 }
@@ -567,8 +575,11 @@ sub listSets {
     debug( "parsing ListSets response " . $list->file() );
     eval{ $parser->parse_uri( $list->file() ) };
     if ( $@ ) { _xmlError( $error ); } 
-    $list->{ error } = $error;
+
+    $token->set_handler( undef );
     $list->{ token } = $token->token() ? $token : undef;
+    $error->set_handler( undef );
+    $list->{ error } = $error;
     return( $list );
 }
 

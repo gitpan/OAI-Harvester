@@ -21,8 +21,12 @@ Net::OAI::GetRecord - The results of a GetRecord OAI-PMH verb.
 
 sub new {
     my ( $class, %opts ) = @_;
+
+    ## default metadata handler
+    $opts{ metadataHandler } = 'Net::OAI::Record::OAI_DC' unless $opts{ metadataHandler };
+    Net::OAI::Harvester::_verifyMetadataHandler( $opts{ metadataHandler } );
+
     my $self = bless \%opts, ref( $class ) || $class;
-    $self->{ insideHeader } = $self->{ insideSet } = 0;
     $self->{ header } = undef;
     $self->{ setSpecs } = [];
     return( $self );
@@ -46,6 +50,19 @@ sub metadata {
     return( $self->{ metadata } );
 }
 
+
+=head2 record()
+
+=cut
+
+sub record {
+    my $self = shift;
+    return Net::OAI::Record->new( 
+	header   => $self->{ header },
+	metadata => $self->{ metadata },
+    );
+}
+
 my $xmlns_oai = "http://www.openarchives.org/OAI/2.0/";
 
 ## SAX Handlers
@@ -54,59 +71,37 @@ sub start_element {
     my ( $self, $element ) = @_;
     return $self->SUPER::start_element($element) unless $element->{NamespaceURI} eq $xmlns_oai;
 
-    my $tagName = $element->{ LocalName };
-    if ( $tagName eq 'header' ) { 
-	$self->{ insideHeader } = 1;
-	if ( exists( $element->{ Attributes }{ '{}status' } ) ) {
-	    $self->{ headerStatus } = $element->{ Attributes }{ '{}status' };
-	} else {
-	    $self->{ headerStatus } = '';
-	}
+    ## if we are at the start of a new record then we need an empty 
+    ## metadata object to fill up 
+    if ( ($element->{ LocalName } eq 'record') ) { 
+	## we store existing downstream handler so we can replace
+	## it after we are done retrieving the metadata record
+	$self->{ OLD_Handler } = $self->get_handler();
+	my $header = Net::OAI::Record::Header->new( 
+	    Handler => $self->{ metadataHandler }->new() 
+	);
+	$self->set_handler( $header );
     }
-    elsif ( $tagName eq 'setSpec' ) {
-	$self->{ insideSet } = 1;
-    }
-    else {
-	$self->SUPER::start_element( $element );
-        }
-    push( @{ $self->{ tagStack } }, $element->{ LocalName } );
+    return $self->SUPER::start_element( $element );
 }
 
 sub end_element {
     my ( $self, $element ) = @_;
-    return $self->SUPER::end_element($element) unless $element->{NamespaceURI} eq $xmlns_oai;
 
-    my $tagName = $element->{ LocalName };
-    if ( $tagName eq 'header' ) {
-	Net:OAI::Harvester::debug( "found header" );
-	my $header = Net::OAI::Record::Header->new();
-	$header->status( $self->{ headerStatus } );
-	$header->identifier( $self->{ identifier } );
-	$header->datestamp( $self->{ datestamp } );
-	$header->sets( @{ $self->{ setSpecs } } );
-	push( @{ $self->{ headers } }, $header );
-	$self->{ insideHeader } = 0;
-	$self->{ status } = $self->{ identifier } = $self->{ datestamp } = $self->{ setSpec } = '';
-	$self->{ setSpecs } = [];
-    }
-    elsif ( $tagName eq 'setSpec' ) { 
-	Net::OAI::Harvester::debug( "found setSpec" );
-	push( @{ $self->{ setSpecs } }, $self->{ setSpec } );
-	$self->{ insideSet } = 0;
-    }
-    else { 
-        $self->SUPER::end_element( $element );
-    }
-    pop( @{ $self->{ tagStack } } );
-}
+    $self->SUPER::end_element( $element );
+    return unless $element->{NamespaceURI} eq $xmlns_oai;
 
-sub characters {
-    my ( $self, $characters ) = @_;
-    if ( $self->{ insideHeader } ) { 
-	$self->{ $self->{ tagStack }[-1] } .= $characters->{ Data };
-    } else {
-	$self->SUPER::characters( $characters );
-    }
+    ## if we've got to the end of the record we need finish up
+    ## the object
+    if ( $element->{ LocalName } eq 'record' ) {
+	my $header = $self->get_handler();
+	$self->{ metadata } = $header->get_handler();
+	$header->set_handler( undef ); ## remove reference to $metadata
+        $self->{ header } = $header;
+	## set handler to what is was before we started processing
+	## the record
+	$self->set_handler( $self->{ OLD_Handler } );
+      }
 }
 
 1;
