@@ -37,5 +37,7 @@ t/050.listrecords.t
 t/055.listallrecords.t
 t/060.listsets.t
 t/070.dump.t
-t/MyHandler.pm
-t/YourHandler.pm
+t/MyMDHandler.pm
+t/MyRCHandler.pm
+t/YourMDHandler.pm
+t/YourRCHandler.pm

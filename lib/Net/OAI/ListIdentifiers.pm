@@ -58,15 +58,16 @@ sub next {
     return( $header );
 }
 
-my $xmlns_oai = "http://www.openarchives.org/OAI/2.0/";
-
 ## SAX Handlers
 
 sub start_element {
     my ( $self, $element ) = @_;
-    if ( ($element->{NamespaceURI} eq $xmlns_oai) and ($element->{ LocalName } eq 'header') ) {
+    return $self->SUPER::start_element( $element ) unless $element->{NamespaceURI} eq Net::OAI::Harvester::XMLNS_OAI;
+
+    if ( $element->{ LocalName } eq 'header' ) {
 	$self->{ OLD_Handler } = $self->get_handler();
 	$self->set_handler( Net::OAI::Record::Header->new() );
+    } elsif ( $element->{ LocalName } eq 'ListIdentifiers' ) {
     }
     $self->SUPER::start_element( $element );
 }
@@ -74,7 +75,8 @@ sub start_element {
 sub end_element {
     my ( $self, $element ) = @_;
     $self->SUPER::end_element( $element );
-    return unless $element->{NamespaceURI} eq $xmlns_oai;
+    return unless $element->{NamespaceURI} eq Net::OAI::Harvester::XMLNS_OAI;
+
     if ( $element->{ LocalName } eq 'header' ) {
 	my $header = $self->get_handler();
         Net::OAI::Harvester::debug( "committing header to object store" );

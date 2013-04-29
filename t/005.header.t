@@ -4,7 +4,7 @@ use strict;
 use warnings;
 $XML::SAX::ParserPackage = $XML::SAX::ParserPackage ||= $ENV{'NOH_ParserPackage'};
 
-use_ok( 'Net::OAI::Record::Header' );
+use_ok( 'Net::OAI::Harvester' );
 
 my $header1 = new_ok('Net::OAI::Record::Header');
 

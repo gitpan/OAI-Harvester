@@ -30,11 +30,18 @@ Net::OAI::Harvester::listRecords() calls it for you.
 sub new {
     my ( $class, %opts ) = @_;
 
-    ## default metadata handler
-    $opts{ metadataHandler } = 'Net::OAI::Record::OAI_DC' 
-	if ( ! $opts{ metadataHandler } );
-    
-    Net::OAI::Harvester::_verifyMetadataHandler( $opts{ metadataHandler } );
+    my $package;
+    if ( $package = $opts{ recordHandler } ) {  
+        $opts{ metadataHandler } and croak( "you may pass either a recordHandler or a metadataHandler to getRecord()" );
+        delete $opts { metadataHandler };
+    } elsif ( $package = $opts{ metadataHandler } ) {  
+	delete $opts{ recordHandler };
+    } else {
+        delete $opts{ recordHandler };
+	$package = $opts{ metadataHandler } = 'Net::OAI::Record::OAI_DC';
+    }
+    Net::OAI::Harvester::_verifyMetadataHandler( $package );
+
     my $self = bless \%opts, ref( $class ) || $class;
     my ( $fh, $tempfile ) = tempfile(UNLINK => 1);
     binmode( $fh, ':utf8' );
@@ -50,7 +57,7 @@ sub new {
 
 =head2 next()
 
-Return the next metadata object or undef if there are no more.
+Return the next metadata or record object or undef if there are no more.
 
 =cut
 
@@ -78,6 +85,7 @@ sub next {
 }
 
 =head2 metadataHandler()
+=head2 recordHandler()
 
 Returns the name of the package being used to represent the individual metadata
 records. If unspecified it defaults to L<Net::OAI::Record::OAI_DC> which 
@@ -90,25 +98,34 @@ sub metadataHandler {
     return( $self->{ metadataHandler } );
 }
 
-my $xmlns_oai = "http://www.openarchives.org/OAI/2.0/";
+sub recordHandler {
+    my $self = shift;
+    return( $self->{ recordHandler } );
+}
 
 ## SAX Handlers
 
 sub start_element {
     my ( $self, $element ) = @_;
-
-    return $self->SUPER::start_element($element) unless $element->{NamespaceURI} eq $xmlns_oai;
+    return $self->SUPER::start_element( $element ) unless $element->{NamespaceURI} eq Net::OAI::Harvester::XMLNS_OAI;
 
     ## if we are at the start of a new record then we need an empty 
     ## metadata object to fill up 
-    if ( ($element->{ LocalName } eq 'record') ) { 
+    if ( $element->{ LocalName } eq 'record' ) { 
 	## we store existing downstream handler so we can replace
 	## it after we are done retrieving the metadata record
 	$self->{ OLD_Handler } = $self->get_handler();
-	my $header = Net::OAI::Record::Header->new( 
-	    Handler => $self->{ metadataHandler }->new() 
-	);
+	my $header = $self->{ recordHandler }
+		   ? Net::OAI::Record::Header->new( 
+			Handler => (ref($self->{ recordHandler }) ? $self->{ recordHandler } : $self->{ recordHandler }->new()),
+			fwdAll => 1,
+		     )
+		   : Net::OAI::Record::Header->new( 
+			Handler => (ref($self->{ metadataHandler }) ? $self->{ metadataHandler } : $self->{ metadataHandler }->new()),
+		     );
 	$self->set_handler( $header );
+    }
+    elsif ( $element->{ LocalName } eq 'ListRecords' ) {
     }
     return $self->SUPER::start_element( $element );
 }
@@ -117,7 +134,7 @@ sub end_element {
     my ( $self, $element ) = @_;
 
     $self->SUPER::end_element( $element );
-    return unless $element->{NamespaceURI} eq $xmlns_oai;
+    return unless $element->{NamespaceURI} eq Net::OAI::Harvester::XMLNS_OAI;
 
     ## if we've got to the end of the record we need to stash
     ## away the object in our object store on disk
@@ -126,16 +143,18 @@ sub end_element {
 	## we need to swap out the existing metadata handler and freeze
 	## it on disk
 	my $header = $self->get_handler();
-	my $metadata = $header->get_handler();
+	my $data = $header->get_handler();
 	$header->set_handler( undef ); ## remove reference to $record
 
 	## set handler to what is was before we started processing
 	## the record
 	$self->set_handler( $self->{ OLD_Handler } );
-	my $record = Net::OAI::Record->new( 
-	    header	=> $header,
-	    metadata	=> $metadata,
-	);
+        my $record;
+        if ( $self->{ recordHandler } ) {
+	    $record = Net::OAI::Record->new(header => $header, alldata => $data)
+        } else {
+	    $record = Net::OAI::Record->new(header => $header, metadata => $data)
+	};
 
 	## commit the object to disk
         Net::OAI::Harvester::debug( "committing record to object store" );
@@ -157,5 +176,4 @@ sub _fatal {
 }
 
 1;
-
 

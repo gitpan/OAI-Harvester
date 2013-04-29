@@ -3,6 +3,8 @@ package Net::OAI::Harvester;
 use strict;
 use warnings;
 
+use constant XMLNS_OAI => "http://www.openarchives.org/OAI/2.0/";
+
 use URI;
 use LWP::UserAgent;
 use XML::SAX qw( Namespaces Validation );
@@ -20,7 +22,7 @@ use Net::OAI::ListSets;
 use Net::OAI::Record::Header;
 use Net::OAI::Record::OAI_DC;
 
-our $VERSION = '1.16_07';
+our $VERSION = '1.16_08';
 our $DEBUG = 0;
 
 =head1 NAME
@@ -229,14 +231,15 @@ sub identify {
     my $identity = Net::OAI::Identify->new( $self->_get( $uri ) );
     return $identity if $identity->{ error };
 
-    my $token = Net::OAI::ResumptionToken->new( Handler => $identity );
-    my $error = Net::OAI::Error->new( Handler => $token );
+#    my $token = Net::OAI::ResumptionToken->new( Handler => $identity );
+#    my $error = Net::OAI::Error->new( Handler => $token );
+    my $error = Net::OAI::Error->new( Handler => $identity );
     my $parser = _parser( $error ); 
     debug( "parsing Identify response " .  $identity->file() );
     eval { $parser->parse_uri( $identity->file() ) };
     if ( $@ ) {_xmlError( $error ); } 
-    $token->set_handler( undef );
-    $identity->{ token } = $token->token() ? $token : undef;
+#    $token->set_handler( undef );
+#    $identity->{ token } = $token->token() ? $token : undef;
     $error->set_handler( undef );
     $identity->{ error } = $error;
     return( $identity );
@@ -295,25 +298,41 @@ in the C<identifier> and an optional C<metadataPrefix> parameters to identify
 the record, and the flavor of metadata you would like. Net::OAI::Harvester 
 includes a parser for OAI DublinCore, so if you do not specifiy a 
 metadataPrefix 'oai_dc' will be assumed. If you would like to drop in your own 
-XML::Handler for another type of metadata use the C<metadataHandler> parameter.
+XML::Handler for another type of metadata use either the C<metadataHandler>
+or the C<recordHandler> parameter, either the name of the class as string
+or an already instantiated object of that class.
 
-    my $record = $harvester->getRecord( 
+    my $result = $harvester->getRecord( 
 	identifier	=> 'abc123',
     );
 
-    ## get the Net::OAI::Record::Header object
-    my $header = $record->header();
+    ## did something go wrong?
+    if ( my $oops = $result->errorCode() ) { ... };
+
+    ## get the result as Net::OAI::Record object
+    my $record = $result->record();     # undef if error
+
+    ## directly get the Net::OAI::Record::Header object
+    my $header = $result->header();     # undef if error
+    ## same as
+    my $header = $result->record()->header();     # undef if error
 
     ## get the metadata object 
-    my $metadata = $record->metadata();
+    my $metadata = $result->metadata(); # undef if error or harvested with recordHandler
 
     ## or if you would rather use your own XML::Handler 
     ## pass in the package name for the object you would like to create
-    my $record = $harvester->getRecord(
+    my $result = $harvester->getRecord(
 	identifier		=> 'abc123',
-	metadataHandler		=> 'MyHandler'	    
+	metadataHandler		=> 'MyHandler'
     );
-    my $metadata = $record->metadata();
+    my $metadata = $result->metadata();
+    
+    my $result = $harvester->getRecord(
+	identifier		=> 'abc123',
+	recordHandler		=> 'MyCompleteHandler'
+    );
+    my $complete_record = $result->alldata(); # undef if error or harvested with metadataHandler
     
 =cut 
 
@@ -324,15 +343,21 @@ sub getRecord {
 	if ( ! exists( $opts{ 'identifier' } ) );
     croak( "you must pass the metadataPrefix parameter to getRecord()" )
 	if ( ! exists( $opts{ 'metadataPrefix' } ) );
+    croak( "recordHandler and metadataHandler are mutually exclusive parameters for getRecord()" )
+        if exists $opts{ recordHandler } and exists $opts{ metadataHandler };
 
-    my $metadataHandler;
-    if ( exists( $opts{ metadataHandler } ) ) {  
-	my $package = $opts{ metadataHandler };
-	_verifyMetadataHandler( $package );
-	$metadataHandler = ref($package) ? $package : $package->new();
-    } else {
-	$metadataHandler = Net::OAI::Record::OAI_DC->new();
-    }
+#    my ($recordHandler, $metadataHandler);
+#    if ( exists( $opts{ recordHandler } ) ) {  
+#	my $package = $opts{ recordHandler };
+#	_verifyMetadataHandler( $package );
+#	$recordHandler = ref($package) ? $package : $package->new();
+#    } elsif ( exists( $opts{ metadataHandler } ) ) {  
+#	my $package = $opts{ metadataHandler };
+#	_verifyMetadataHandler( $package );
+#	$metadataHandler = ref($package) ? $package : $package->new();
+#    } else {
+#	$metadataHandler = Net::OAI::Record::OAI_DC->new();
+#    }
 
     my $uri = $self->{ baseURL };
     $uri->query_form(
@@ -342,7 +367,9 @@ sub getRecord {
     );
 
     my $record = Net::OAI::GetRecord->new( $self->_get( $uri ), 
-	metadataHandler => $opts{ metadataHandler } );
+	recordHandler => $opts{ recordHandler },
+	metadataHandler => $opts{ metadataHandler },
+        );
     return $record if $record->{ error };
 
     my $error = Net::OAI::Error->new( Handler => $record );
@@ -378,7 +405,11 @@ OAI-PMH spec.
     }
 
 If you would like to use your own metadata handler then you can specify 
-the package name of the handler. 
+the package name of the handler as the C<metadataHandler> (will be exposed
+to events below the C<metadata> element) or C<recordHandler> (will be
+exposed to the C<record> element and all its children) parameter, passing
+either the name of the class as string or an already instantiated object of 
+that class which will be reused for all records. 
 
     my $records = $harvester->listRecords(
 	metadataPrefix	=> 'mods',
@@ -399,11 +430,12 @@ if you are working with a repository that wants you to wait between
 requests.
 
     my $records = $harvester->listRecords( metadataPrefix => 'oai_dc' );
+    my $responseDate = $records->responseDate();
     my $finished = 0;
 
     while ( ! $finished ) {
 
-	while ( my $record = $records->next() ) {
+	while ( my $record = $records->next() ) { # a Net::OAI::Record object
 	    my $metadata = $record->metadata();
 	    # do interesting stuff here 
 	}
@@ -419,6 +451,15 @@ requests.
 
     }
 
+Please note: Since C<listRecords()> stashes away the individual
+records it encounters with C<Storable>, special care has to 
+be taken if the handlers you provided make use of XS modules
+since these objects cannot be reliably handled. Therefore you will
+have to provide the special serializing and deserializing methods
+C<STORABLE_freeze()> and C<STORABLE_thaw()> for the objects
+used by your filter(s).
+
+
 =cut
 
 sub listRecords {
@@ -427,6 +468,9 @@ sub listRecords {
     croak( "you must pass the metadataPrefix parameter to listRecords()" )
 	if ( ! exists( $opts{ 'metadataPrefix' } )
 	    and ! exists( $opts{ 'resumptionToken' } ) );
+    croak( "recordHandler and metadataHandler are mutually exclusive parameters for listRecords()" )
+        if exists $opts{ recordHandler } and exists $opts{ metadataHandler };
+
     my %pairs = ( 
 	verb		  => 'ListRecords', 
     );
@@ -440,7 +484,9 @@ sub listRecords {
     $uri->query_form( %pairs );
 
     my $list = Net::OAI::ListRecords->new( $self->_get( $uri ), 
-	metadataHandler => $opts{ metadataHandler } );
+	metadataHandler => $opts{ metadataHandler },
+	recordHandler => $opts{ recordHandler },
+        );
     return $list if $list->{ error };
 
     my $token = Net::OAI::ResumptionToken->new( Handler => $list );
@@ -484,7 +530,7 @@ Net::OAI::ListIdentifiers object.
     );
 
     ## iterate through the results with next()
-    while ( my $header = $identifiers->next() ) { 
+    while ( my $header = $identifiers->next() ) {  # a Net::OAI::Record::Header object
 	print "identifier: ", $header->identifier(), "\n";
     }
 

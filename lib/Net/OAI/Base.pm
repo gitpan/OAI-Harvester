@@ -2,6 +2,7 @@ package Net::OAI::Base;
 
 use strict;
 use Carp qw ( croak );
+our $VERSION = 'v1.01.0';
 
 =head1 NAME
 

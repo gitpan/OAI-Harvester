@@ -5,6 +5,7 @@ use base qw( XML::SAX::Base Exporter );
 our @EXPORT = (
 );
 
+
 =head1 NAME
 
 Net::OAI::Error - OAI-PMH errors.
@@ -13,8 +14,16 @@ Net::OAI::Error - OAI-PMH errors.
 
 =head1 DESCRIPTION
 
-Note: Actually this is a filter which actually processes all top-level
-OAI-PMH elements.
+Note: Actually this class implements the SAX filter which processes 
+(and forwards) all top-level OAI-PMH elements. 
+
+Specifically the following events are not forwarded: OAI-PMH itself,
+request, responseDate and error.
+
+Thus events to the following top level OAI-PMH elements are forwarded: 
+The elements corresponding to the individual verbs and the resumption
+token.
+
 
 =head1 METHODS
 
@@ -159,11 +168,10 @@ sub HTTPRetryAfter {
 
 ## all children of Net::OAI::Base should call this to make sure
 ## certain object properties are set
-my $xmlns_oai = "http://www.openarchives.org/OAI/2.0/";
 
 sub start_element { 
     my ( $self, $element ) = @_;
-    return $self->SUPER::start_element($element) unless $element->{NamespaceURI} eq $xmlns_oai;  # should be error?
+    return $self->SUPER::start_element($element) unless $element->{NamespaceURI} eq Net::OAI::Harvester::XMLNS_OAI;  # should be error?
 
     my $tagName = $element->{ LocalName };
     if ( $tagName eq 'request' ) {
@@ -173,16 +181,16 @@ sub start_element {
             next if $_->{ Prefix };
             $self->{ _requestAttrs }->{ $_->{ Name } } = $_->{ Value };
           }
-	$self->{ _insideError } = "";
+	$self->{ _insideSelf } = "";
       }
     elsif ( $tagName eq 'responseDate' ) {
         Net::OAI::Harvester::debug( "caught responseDate" );
-	$self->{ _insideError } = "";
+	$self->{ _insideSelf } = "";
       }
     elsif ( $tagName eq 'error' ) {
         Net::OAI::Harvester::debug( "caught error" );
 	$self->{ errorCode } = $element->{ Attributes }{ '{}code' }{ Value };
-	$self->{ _insideError } = "";
+	$self->{ _insideSelf } = "";
     } else { 
 	$self->SUPER::start_element( $element );
     }
@@ -190,19 +198,20 @@ sub start_element {
 
 sub end_element {
     my ( $self, $element ) = @_;
-    return $self->SUPER::end_element($element) unless $element->{NamespaceURI} eq $xmlns_oai;  # should be error?
+    return $self->SUPER::end_element($element) unless $element->{NamespaceURI} eq Net::OAI::Harvester::XMLNS_OAI;  # should be error?
+
     my $tagName = $element->{ LocalName };
     if ( $tagName eq 'request' ) {
-	$self->{ _requestContent } = $self->{ _insideError };
-	delete $self->{ _insideError };
+	$self->{ _requestContent } = $self->{ _insideSelf };
+	delete $self->{ _insideSelf };
       }
     elsif ( $tagName eq 'responseDate' ) {
-	$self->{ _responseDate } = $self->{ _insideError };
-	delete $self->{ _insideError };
+	$self->{ _responseDate } = $self->{ _insideSelf };
+	delete $self->{ _insideSelf };
       }
     elsif ( $tagName eq 'error' ) {
-	$self->{ errorString } = $self->{ _insideError };
-	delete $self->{ _insideError };
+	$self->{ errorString } = $self->{ _insideSelf };
+	delete $self->{ _insideSelf };
     } else {
 	$self->SUPER::end_element( $element );
     }
@@ -210,11 +219,12 @@ sub end_element {
 
 sub characters {
     my ( $self, $characters ) = @_;
-    if ( exists $self->{ _insideError } ) { 
-	$self->{ _insideError } .= $characters->{ Data };
+    if ( exists $self->{ _insideSelf } ) { 
+	$self->{ _insideSelf } .= $characters->{ Data };
     } else { 
 	$self->SUPER::characters( $characters );
     }
 }
 
 1;
+

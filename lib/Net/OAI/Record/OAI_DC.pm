@@ -3,7 +3,12 @@ package Net::OAI::Record::OAI_DC;
 use strict;
 use base qw( XML::SAX::Base );
 use Carp qw( carp );
-our $VERSION = 'v1.00.0';
+our $VERSION = 'v1.01.0';
+
+use constant {
+  XMLNS_DC => 'http://purl.org/dc/elements/1.1/',
+  XMLNS_OAIDC => 'http://www.openarchives.org/OAI/2.0/oai_dc/',
+};
 
 our @OAI_DC_ELEMENTS = qw(
     title 
@@ -119,17 +124,14 @@ sub asString {
     return join("\n", @result);
 }
 
-our $xmlns_dc = "http://purl.org/dc/elements/1.1/";
-our $xmlns_oaidc = "http://www.openarchives.org/OAI/2.0/oai_dc/";
-
 ## SAX handlers
 
 sub start_element {
     my ( $self, $element ) = @_;
     my $elname = $element->{ LocalName };
-    if ( ($element->{ NamespaceURI } eq $xmlns_oaidc) and ($elname eq "dc") ) {
-	$self->{ insideRecord } = 1}
-    elsif ( $element->{ NamespaceURI } ne $xmlns_dc ) {
+    if ( ($element->{ NamespaceURI } eq XMLNS_OAIDC) and ($elname eq "dc") ) {
+	$self->{ _insideRecord } = 1}
+    elsif ( $element->{ NamespaceURI } ne XMLNS_DC ) {
         carp "what is ".$element->{ Name }."?";
         return undef;
       }
@@ -143,9 +145,9 @@ sub end_element {
     my ( $self, $element ) = @_;
     my $elname = $element->{ LocalName };
 
-    if ( ($element->{ NamespaceURI } eq $xmlns_oaidc) and ($elname eq "dc") ) {
-	$self->{ insideRecord } = 0}
-    elsif ( $element->{ NamespaceURI } ne $xmlns_dc ) {
+    if ( ($element->{ NamespaceURI } eq XMLNS_OAIDC) and ($elname eq "dc") ) {
+	$self->{ _insideRecord } = 0}
+    elsif ( $element->{ NamespaceURI } ne XMLNS_DC ) {
         return undef}
     elsif ( grep /$elname/, @OAI_DC_ELEMENTS ) {   # o.k.
         push( @{ $self->{ $elname } }, $self->{ chars } );
@@ -158,7 +160,7 @@ sub end_element {
 
 sub characters {
     my ( $self, $characters ) = @_;
-    $self->{ chars } .= $characters->{ Data } if $self->{ insideRecord };
+    $self->{ chars } .= $characters->{ Data } if $self->{ _insideRecord };
 }
 
 1;

@@ -21,7 +21,6 @@ Net::OAI::ListSets - The results of the ListSets OAI-PMH verb.
 sub new {
     my ( $class, %opts ) = @_;
     my $self = bless \%opts, ref( $class ) || $class;
-    $self->{ insideSet } = 0;
     $self->{ specs } = {};
     return( $self );
 }
@@ -52,26 +51,24 @@ sub setName {
     return( undef );
 }
 
-my $xmlns_oai = "http://www.openarchives.org/OAI/2.0/";
-
 ## SAX Handlers
 
 sub start_element {
     my ( $self, $element ) = @_;
     $self->SUPER::start_element( $element );
-    return unless $element->{NamespaceURI} eq $xmlns_oai;
+    return unless $element->{ NamespaceURI } eq Net::OAI::Harvester::XMLNS_OAI;
     push( @{ $self->{ tagStack } }, $element->{ LocalName } );
 }
 
 sub end_element {
     my ( $self, $element ) = @_;
     $self->SUPER::end_element( $element );
-    return unless $element->{NamespaceURI} eq $xmlns_oai;
+    return unless $element->{ NamespaceURI } eq Net::OAI::Harvester::XMLNS_OAI;
+    pop( @{ $self->{ tagStack } } );
     if ( $element->{ LocalName } eq 'set' ) { 
 	$self->{ specs }{ $self->{ setSpec } } = $self->{ setName };
 	$self->{ setSpec } = $self->{ setName } = undef;
     }
-    pop( @{ $self->{ tagStack } } );
 }
 
 sub characters {

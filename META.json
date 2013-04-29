@@ -41,7 +41,7 @@
    "provides" : {
       "Net::OAI::Base" : {
          "file" : "lib/Net/OAI/Base.pm",
-         "version" : 0
+         "version" : "v1.1.0"
       },
       "Net::OAI::Error" : {
          "file" : "lib/Net/OAI/Error.pm",
@@ -53,7 +53,7 @@
       },
       "Net::OAI::Harvester" : {
          "file" : "lib/Net/OAI/Harvester.pm",
-         "version" : "1.16_07"
+         "version" : "1.16_08"
       },
       "Net::OAI::Identify" : {
          "file" : "lib/Net/OAI/Identify.pm",
@@ -81,11 +81,11 @@
       },
       "Net::OAI::Record::Header" : {
          "file" : "lib/Net/OAI/Record/Header.pm",
-         "version" : "v1.0.0"
+         "version" : "v1.1.0"
       },
       "Net::OAI::Record::OAI_DC" : {
          "file" : "lib/Net/OAI/Record/OAI_DC.pm",
-         "version" : "v1.0.0"
+         "version" : "v1.1.0"
       },
       "Net::OAI::ResumptionToken" : {
          "file" : "lib/Net/OAI/ResumptionToken.pm",
@@ -98,5 +98,5 @@
          "http://dev.perl.org/licenses/"
       ]
    },
-   "version" : "1.16_07"
+   "version" : "1.16_08"
 }

@@ -22,7 +22,8 @@ sub new {
     my ( $class, %opts ) = @_;
     return bless {
 	header	    => $opts{ header },
-	metadata    => $opts{ metadata }
+	@{[$opts{ metadata } ? (metadata => $opts{ metadata }) : ()]},
+	@{[$opts{ alldata } ? (alldata => $opts{ alldata }) : ()]},
     }, ref( $class ) || $class;
 }
 
@@ -41,7 +42,18 @@ sub header {
 
 sub metadata {
     my $self = shift;
-    return( $self->{ metadata } );
+#   return undef unless exists $self->{ metadata };
+    return $self->{ metadata } || undef;
+}
+
+=head2 alldata()
+
+=cut 
+
+sub alldata {
+    my $self = shift;
+#   return undef unless exists $self->{ alldata };
+    return $self->{ alldata } || undef;
 }
 
 =head1 TODO

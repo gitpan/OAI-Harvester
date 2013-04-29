@@ -1,7 +1,8 @@
-use Test::More tests => 19; 
+use Test::More tests => 16; 
 
 use strict;
 use warnings;
+use lib qw( t );
 $XML::SAX::ParserPackage = $XML::SAX::ParserPackage ||= $ENV{'NOH_ParserPackage'};
 
 use_ok( 'Net::OAI::Harvester' );
@@ -36,12 +37,17 @@ SKIP: {
         is($ra{ identifier }, $id, 'OAI identifier' );
      };
 
+    my $oairecord = $r->record();
+    isa_ok( $oairecord, 'Net::OAI::Record' );
+
     my $header = $r->header();
-    is( $header->identifier, $id, 'identifier()' );
+    isa_ok( $header, 'Net::OAI::Record::Header' );
+    is( $header->identifier, $id, 'OAI identifier()' );
 
 ## extract metadata and see if a few things are there 
 
     my $dc = $r->metadata();
+    isa_ok( $dc, 'Net::OAI::Record::OAI_DC' );
     is( 
         $dc->title(), 
         'View of Springfield, Mass. 1875.',
@@ -56,76 +62,141 @@ SKIP: {
 }
 
 
-## test a custom handler
-use lib qw( t );
+subtest 'a custom metadata handler' => sub {
+    plan tests => 3;
 
-$r = $h->getRecord( 
-    identifier		=> $id, 
-    metadataPrefix	=> 'oai_dc',
-    metadataHandler	=> 'MyHandler',
-);
+    $r = $h->getRecord( 
+        identifier	=> $id, 
+        metadataPrefix	=> 'oai_dc',
+        metadataHandler	=> 'MyMDHandler',
+    );
 
-undef $HTE;
-if ( my $e = $r->HTTPError() ) {
-    $HTE = "HTTP Error ".$e->status_line;
-    $HTE .= " [Retry-After: ".$r->HTTPRetryAfter()."]" if $e->code() == 503;
-  }
-
-SKIP: {
-    skip $HTE, 2 if $HTE;
-
-    my $metadata = $r->metadata();
-    isa_ok( $metadata, 'MyHandler' );
-    is( $metadata->title(), 'View of Springfield, Mass. 1875.', 'custom handler works' );
-  }
-
-## test another custom handler
-
-$r = $h->getRecord( 
-    identifier		=> $id, 
-    metadataPrefix	=> 'oai_dc',
-    metadataHandler	=> 'YourHandler',
-);
-
-undef $HTE;
-if ( my $e = $r->HTTPError() ) {
-    $HTE = "HTTP Error ".$e->status_line;
-    $HTE .= " [Retry-After: ".$r->HTTPRetryAfter()."]" if $e->code() == 503;
-  }
+    my $HTE;
+    if ( my $e = $r->HTTPError() ) {
+        $HTE = "HTTP Error ".$e->status_line;
+        $HTE .= " [Retry-After: ".$r->HTTPRetryAfter()."]" if $e->code() == 503;
+      }
 
 SKIP: {
     skip $HTE, 3 if $HTE;
 
+    ok( ! defined $r->alldata(), 'custom metadata handler does not deliver all data' );
     my $metadata = $r->metadata();
-    isa_ok( $metadata, 'YourHandler' );
-    isa_ok( $metadata, 'MyHandler' );
-    is( $metadata->result(), 'View of Springfield, Mass. 1875.', 'custom handler works' );
+    isa_ok( $metadata, 'MyMDHandler' );
+    is( $metadata->title(), 'View of Springfield, Mass. 1875.', 'custom metadata handler works' );
+  }
 };
 
-## test based on instance of a custom handler
+subtest 'another custom metadata handler' => sub {
+    plan tests => 4;
 
-use_ok( 'YourHandler' );
-my $customhandler = new_ok('YourHandler');
-isa_ok( $customhandler, 'XML::SAX::Base' );
-$r = $h->getRecord( 
-    identifier		=> $id, 
-    metadataPrefix	=> 'oai_dc',
-    metadataHandler	=> $customhandler,
-);
+    my $r = $h->getRecord( 
+        identifier	=> $id, 
+        metadataPrefix	=> 'oai_dc',
+        metadataHandler	=> 'YourMDHandler',
+    );
 
-undef $HTE;
-if ( my $e = $r->HTTPError() ) {
-    $HTE = "HTTP Error ".$e->status_line;
-    $HTE .= " [Retry-After: ".$r->HTTPRetryAfter()."]" if $e->code() == 503;
-  }
+    my $HTE;
+    if ( my $e = $r->HTTPError() ) {
+        $HTE = "HTTP Error ".$e->status_line;
+        $HTE .= " [Retry-After: ".$r->HTTPRetryAfter()."]" if $e->code() == 503;
+      }
 
 SKIP: {
-    skip $HTE, 3 if $HTE;
+    skip $HTE, 4 if $HTE;
 
+    ok( ! defined $r->alldata(), 'custom metadata handler does not deliver all data' );
     my $metadata = $r->metadata();
-    isa_ok( $metadata, 'YourHandler' );
-    isa_ok( $metadata, 'MyHandler' );
-    is( $metadata->result(), 'View of Springfield, Mass. 1875.', 'custom handler works' );
-}
+    isa_ok( $metadata, 'YourMDHandler' );
+    isa_ok( $metadata, 'MyMDHandler' );
+    is( $metadata->result(), 'View of Springfield, Mass. 1875.', 'custom metadata handler works' );
+  }
+};
+
+subtest 'custom record handler' => sub {
+    plan tests => 4;
+    my $r = $h->getRecord( 
+    identifier		=> $id, 
+    metadataPrefix	=> 'oai_dc',
+    recordHandler	=> 'MyRCHandler',
+    );
+
+    my $HTE;
+    if ( my $e = $r->HTTPError() ) {
+        $HTE = "HTTP Error ".$e->status_line;
+        $HTE .= " [Retry-After: ".$r->HTTPRetryAfter()."]" if $e->code() == 503;
+      }
+
+SKIP: {
+    skip $HTE, 4 if $HTE;
+
+    ok( ! defined $r->metadata(), 'custom record handler does not deliver metadata' );
+    my $record = $r->alldata();
+    isa_ok( $record, 'MyRCHandler' );
+    is( $record->title(), 'View of Springfield, Mass. 1875.', 'custom record handler works for metadata' );
+    is( $record->OAIdentifier(), $id, 'custom record handler works for header' );
+  }
+};
+
+
+subtest 'instance of a custom metadata handler' => sub {
+    plan tests => 7;
+    use_ok( 'YourMDHandler' );
+    my $customMDhandler = new_ok('YourMDHandler');
+    isa_ok( $customMDhandler, 'XML::SAX::Base' );
+
+    my $r = $h->getRecord( 
+        identifier	=> $id, 
+        metadataPrefix	=> 'oai_dc',
+        metadataHandler	=> $customMDhandler,
+    );
+
+    my $HTE;
+    if ( my $e = $r->HTTPError() ) {
+        $HTE = "HTTP Error ".$e->status_line;
+        $HTE .= " [Retry-After: ".$r->HTTPRetryAfter()."]" if $e->code() == 503;
+      }
+
+SKIP: {
+    skip $HTE, 4 if $HTE;
+
+    ok( ! defined $r->alldata(), 'custom metadata handler does not deliver all data' );
+    my $metadata = $r->metadata();
+    isa_ok( $metadata, 'YourMDHandler' );
+    isa_ok( $metadata, 'MyMDHandler' );
+    is( $metadata->result(), 'View of Springfield, Mass. 1875.', 'custom metadata handler instance works' );
+  }
+};
+
+
+subtest 'instance of a custom record handler' => sub {
+    plan tests => 8;
+    use_ok( 'YourRCHandler' );
+    my $customRChandler = new_ok('YourRCHandler');
+    isa_ok( $customRChandler, 'XML::SAX::Base' );
+
+    my $r = $h->getRecord( 
+        identifier	=> $id, 
+        metadataPrefix	=> 'oai_dc',
+        recordHandler	=> $customRChandler,
+    );
+
+    my $HTE;
+    if ( my $e = $r->HTTPError() ) {
+        $HTE = "HTTP Error ".$e->status_line;
+        $HTE .= " [Retry-After: ".$r->HTTPRetryAfter()."]" if $e->code() == 503;
+      }
+
+SKIP: {
+    skip $HTE, 5 if $HTE;
+
+    ok( ! defined $r->metadata(), 'custom record instance does not return metadata flavor of record');
+    my $record = $r->alldata();
+    isa_ok( $record, 'YourRCHandler' );
+    isa_ok( $record, 'MyRCHandler' );
+    is( $record->result_t(), 'View of Springfield, Mass. 1875.', 'custom record handler instance works for metadata' );
+    is( $record->result_i(), $id, 'custom record handler instance works for header' );
+  }
+};
 
 

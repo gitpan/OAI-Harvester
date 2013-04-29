@@ -18,8 +18,6 @@ Net::OAI::Identify - Results of the Identify OAI-PMH verb.
 
 =cut
 
-my $xmlns_oai = "http://www.openarchives.org/OAI/2.0/";
-
 sub new {
     my ( $class, %opts ) = @_;
     my $self = bless \%opts, ref( $class ) || $class;
@@ -33,7 +31,7 @@ sub new {
     $self->{ adminEmails } = [];
     $self->{ compression } = '';
     $self->{ compressions } = [];
-    $self->{ insideDescription } = 0;
+    $self->{ _insideDescription } = 0;
     return( $self );
 }
 
@@ -142,15 +140,15 @@ sub compression {
 
 sub start_element {
     my ( $self, $element ) = @_;
-    return $self->SUPER::start_element($element) unless $element->{NamespaceURI} eq $xmlns_oai;  # should be error?
+    return $self->SUPER::start_element($element) unless $element->{NamespaceURI} eq Net::OAI::Harvester::XMLNS_OAI;  # should be error?
 
     push( @{ $self->{ tagStack } }, $element->{ LocalName } );
-    $self->{ insideDescription } = 1 if $element->{ LocalName } eq 'description';
+    $self->{ _insideDescription } = 1 if $element->{ LocalName } eq 'description';
 }
 
 sub end_element {
     my ( $self, $element ) = @_;
-    return $self->SUPER::end_element($element) unless $element->{NamespaceURI} eq $xmlns_oai;  # should be error?
+    return $self->SUPER::end_element($element) unless $element->{NamespaceURI} eq Net::OAI::Harvester::XMLNS_OAI;  # should be error?
 
     ## store and reset elements that can have multiple values
     if ( $element->{ LocalName } eq 'adminEmail' ) {
@@ -164,13 +162,17 @@ sub end_element {
 	$self->{ compression } = '';
     }
     pop( @{ $self->{ tagStack } } );
-    $self->{ insideDescription } = 0 if $element->{ LocalName } eq 'description';
+    $self->{ _insideDescription } = 0 if $element->{ LocalName } eq 'description';
 }
 
 sub characters {
     my ( $self, $characters ) = @_;
-    $self->{ $self->{ tagStack }[-1] } .= $characters->{ Data } 
-        unless $self->{ insideDescription };
+
+    if ( $self->{ _insideDescription } ) {
+        return $self->SUPER::characters( $characters );
+    } else {
+        $self->{ $self->{ tagStack }[-1] } .= $characters->{ Data } 
+    }
 }
 
 1;

@@ -1,4 +1,4 @@
-use Test::More tests => 14;
+use Test::More tests => 16;
 
 use strict;
 use warnings;
@@ -80,7 +80,7 @@ use lib qw( t ); ## so harvester will be able to locate our handler
 
 $l = $h->listRecords( 
     metadataPrefix  => 'oai_dc', 
-    metadataHandler => 'MyHandler',
+    metadataHandler => 'MyMDHandler',
     set		    => 'papr' 
 );
 
@@ -96,13 +96,43 @@ if ( my $e = $l->HTTPError() ) {
 SKIP: {
     skip $HTE, 1 if $HTE;
 
-    subtest 'Collect Custom Result' => sub {
+    subtest 'Collect custom metadataHandler result' => sub {
         while ( my $r = $l->next() ) {
             isa_ok( $r, 'Net::OAI::Record' );
             my $header = $r->header();
             isa_ok( $header, 'Net::OAI::Record::Header' );
             my $metadata = $r->metadata();
-            isa_ok( $metadata, 'MyHandler' );
+            isa_ok( $metadata, 'MyMDHandler' );
+          };
+      };
+}
+
+
+$l = $h->listRecords( 
+    metadataPrefix  => 'oai_dc', 
+    recordHandler => 'MyRCHandler',
+    set		    => 'papr' 
+);
+
+isa_ok( $l, 'Net::OAI::ListRecords', 'listRecords() with recordHandler' );
+
+undef $HTE;
+if ( my $e = $l->HTTPError() ) {
+    $HTE = "HTTP Error ".$e->status_line;
+    $HTE .= " [Retry-After: ".$l->HTTPRetryAfter()."]" if $e->code() == 503;
+    diag("Error for $url: ", $HTE);
+  }
+
+SKIP: {
+    skip $HTE, 1 if $HTE;
+
+    subtest 'Collect custom recordHandler result' => sub {
+        while ( my $r = $l->next() ) {
+            isa_ok( $r, 'Net::OAI::Record' );
+            my $header = $r->header();
+            isa_ok( $header, 'Net::OAI::Record::Header' );
+            my $alldata = $r->alldata();
+            isa_ok( $alldata, 'MyRCHandler' );
           };
       };
 }

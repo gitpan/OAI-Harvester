@@ -21,7 +21,7 @@ Net::OAI::ListMetadataFormats - Results of the ListMetadataFormats OAI-PMH verb.
 sub new {
     my ( $class, %opts ) = @_;
     my $self = bless \%opts, ref( $class ) || $class;
-    $self->{ insideList } = 0;
+    $self->{ _insideList } = 0;
     $self->{ metadataPrefixes } = [];
     $self->{ namespaces } = [];
     $self->{ schemas } = [];
@@ -78,17 +78,18 @@ sub schemas_byprefix {
     return $self->{schemas_byprefix}->{$prefix};
 }
 
-my $xmlns_oai = "http://www.openarchives.org/OAI/2.0/";
-
 # SAX Handlers
 
 sub start_element {
     my ( $self, $element ) = @_;
-    return $self->SUPER::start_element($element) unless $element->{NamespaceURI} eq $xmlns_oai;  # should be error?
+    return $self->SUPER::start_element($element) unless $element->{NamespaceURI} eq Net::OAI::Harvester::XMLNS_OAI;  # should be error?
 
     if ( $element->{ LocalName } eq 'ListMetadataFormats' ) { 
-	$self->{ insideList } = 1;
+	$self->{ _insideList } = 1;
+    } elsif ( $self->{ _insideList } ) {
+    } elsif ( $element->{ LocalName } eq 'OAI-PMH' ) {
     } else {
+warn "who am I? (".$element->{ LocalName }.")";
 	$self->SUPER::start_element( $element );
     }
     push( @{ $self->{ tagStack } }, $element->{ LocalName } );
@@ -96,11 +97,11 @@ sub start_element {
 
 sub end_element {
     my ( $self, $element ) = @_;
-    return $self->SUPER::end_element($element) unless $element->{NamespaceURI} eq $xmlns_oai;  # should be error?
+    return $self->SUPER::end_element($element) unless $element->{NamespaceURI} eq Net::OAI::Harvester::XMLNS_OAI;  # should be error?
 
     my $name = $element->{ LocalName };
     if ( $name eq 'ListMetadataFormats' ) {
-	$self->{ insideList } = 0;
+	$self->{ _insideList } = 0;
     } elsif ( $name eq 'metadataFormat' ) {
         my $nspf = delete $self->{ _currpf };
         $self->{ namespaces_byprefix }->{ $nspf } = delete $self->{ _currns };
@@ -117,7 +118,11 @@ sub end_element {
         push( @{ $self->{ namespaces } }, $self->{ metadataNamespace } );
         $self->{ _currns } = $self->{ metadataNamespace };
         $self->{ metadataNamespace } = '';
+    } elsif ( $self->{ _insideList } ) {
+warn "who am I? ($name)";
+    } elsif ( $element->{ LocalName } eq 'OAI-PMH' ) {
     } else {
+warn "who am I? ($name)";
 	$self->SUPER::end_element( $element );
     }
     pop( @{ $self->{ tagStack } } );
@@ -125,8 +130,10 @@ sub end_element {
 
 sub characters {
     my ( $self, $characters ) = @_;
-    $self->SUPER::characters( $characters );
-    $self->{ $self->{ tagStack }[-1] } .= $characters->{ Data };
+    if ( $self->{ _insideList } ) {
+        $self->{ $self->{ tagStack }[-1] } .= $characters->{ Data }
+    } else {
+        $self->SUPER::characters( $characters )};
 }
 
 1;

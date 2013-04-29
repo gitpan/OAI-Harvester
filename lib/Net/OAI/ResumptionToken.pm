@@ -3,6 +3,7 @@ package Net::OAI::ResumptionToken;
 use strict;
 use base qw ( XML::SAX::Base );
 
+
 =head1 NAME
 
 Net::OAI::ResumptionToken - An OAI-PMH resumption token.
@@ -22,7 +23,7 @@ This SAX filter records resumption token elements.
 sub new {
     my ( $class, %opts ) = @_;
     my $self = bless \%opts, ref( $class ) || $class;
-    $self->{ insideResumptionToken } = 0;
+    $self->{ _insideResumptionToken } = 0;
     $self->{ token } = $self->{ expirationDate } = $self->{ completeListSize } = $self->{ cursor } = undef;
     return( $self );
 }
@@ -91,22 +92,21 @@ sub cursor {
 
 ## internal stuff
 
-my $xmlns_oai = "http://www.openarchives.org/OAI/2.0/";
-
 ## all children of Net::OAI::Base should call this to make sure
 ## certain object properties are set
 
 sub start_element { 
     my ( $self, $element ) = @_;
+    return $self->SUPER::start_element( $element ) unless $element->{NamespaceURI} eq Net::OAI::Harvester::XMLNS_OAI;
 
-    if ( ($element->{NamespaceURI} eq $xmlns_oai) and ($element->{ LocalName } eq 'resumptionToken') ) {
+    if ( $element->{ LocalName } eq 'resumptionToken' ) {
 	my $attr = $element->{ Attributes };
 	$self->{ expirationDate } = $attr->{ '{}expirationDate' }{ Value } if $attr->{ '{}expirationDate' };
 	$self->{ completeListSize } = $attr->{ '{}completeListSize' }{ Value } if $attr->{ '{}completeListSize' };
 	$self->{ cursor } = $attr->{ '{}cursor' }{ Value } if $attr->{ '{}cursor' };
 	$self->{ resumptionTokenText } = "";
-	$self->{ insideResumptionToken } = 1;
-    } elsif ( $self->{ insideResumptionToken } ) {       # should be error?
+	$self->{ _insideResumptionToken } = 1;
+    } elsif ( $self->{ _insideResumptionToken } ) {       # should be error?
     } else { 
 	$self->SUPER::start_element( $element );
     }
@@ -114,10 +114,12 @@ sub start_element {
 
 sub end_element {
     my ( $self, $element ) = @_;
-    if ( ($element->{NamespaceURI} eq $xmlns_oai) and ($element->{ LocalName } eq 'resumptionToken') ) {
+    return $self->SUPER::end_element( $element ) unless $element->{NamespaceURI} eq Net::OAI::Harvester::XMLNS_OAI;
+
+    if ( $element->{ LocalName } eq 'resumptionToken' ) {
         Net::OAI::Harvester::debug( "caught resumption token" );
-	$self->{ insideResumptionToken } = 0;
-    } elsif ( $self->{ insideResumptionToken } ) {       # should be error?
+	$self->{ _insideResumptionToken } = 0;
+    } elsif ( $self->{ _insideResumptionToken } ) {       # should be error?
     } else { 
 	$self->SUPER::end_element( $element );
     }
@@ -125,7 +127,8 @@ sub end_element {
 
 sub characters {
     my ( $self, $characters ) = @_;
-    if ( $self->{ insideResumptionToken } ) {
+
+    if ( $self->{ _insideResumptionToken } ) {
 	$self->{ resumptionTokenText } .= $characters->{ Data };
     } else { 
 	$self->SUPER::characters( $characters );
