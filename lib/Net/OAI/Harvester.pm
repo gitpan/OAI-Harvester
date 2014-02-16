@@ -22,7 +22,7 @@ use Net::OAI::ListSets;
 use Net::OAI::Record::Header;
 use Net::OAI::Record::OAI_DC;
 
-our $VERSION = '1.16_08';
+our $VERSION = '1.16_09';
 our $DEBUG = 0;
 
 =head1 NAME
@@ -225,7 +225,7 @@ For more details see the L<Net::OAI::Identify> documentation.
 
 sub identify {
     my $self = shift;
-    my $uri = $self->{ baseURL };
+    my $uri = $self->{ baseURL }->clone();
     $uri->query_form( 'verb' => 'Identify' );
 
     my $identity = Net::OAI::Identify->new( $self->_get( $uri ) );
@@ -268,12 +268,11 @@ See documentation for L<Net::OAI::ListMetadataFormats> for more details.
 
 sub listMetadataFormats {
     my ( $self, %opts ) = @_;
-    my $uri = $self->{ baseURL };
-    my %pairs = ( verb => 'ListMetadataFormats' );
-    if ( $opts{ identifier } ) { 
-	$pairs{ identifier } = $opts{ identifier }; 
-    }
-    $uri->query_form( %pairs );
+    my $uri = $self->{ baseURL }->clone();
+
+    $uri->query_form( verb => 'ListMetadataFormats', 
+        map { (defined $opts{$_}) ? ($_ => $opts{$_}) : () } qw( identifier )
+      );
 
     my $list = Net::OAI::ListMetadataFormats->new( $self->_get( $uri ) );
     return $list if $list->{ error };
@@ -359,12 +358,11 @@ sub getRecord {
 #	$metadataHandler = Net::OAI::Record::OAI_DC->new();
 #    }
 
-    my $uri = $self->{ baseURL };
-    $uri->query_form(
-	verb		=> 'GetRecord',
-	identifier	=> $opts{ 'identifier' },
-	metadataPrefix	=> $opts{ 'metadataPrefix' }
-    );
+    my $uri = $self->{ baseURL }->clone();
+
+    $uri->query_form( verb => 'GetRecord', 
+        map { (defined $opts{$_}) ? ($_ => $opts{$_}) : () } qw( identifier metadataPrefix )
+      );
 
     my $record = Net::OAI::GetRecord->new( $self->_get( $uri ), 
 	recordHandler => $opts{ recordHandler },
@@ -471,17 +469,11 @@ sub listRecords {
     croak( "recordHandler and metadataHandler are mutually exclusive parameters for listRecords()" )
         if exists $opts{ recordHandler } and exists $opts{ metadataHandler };
 
-    my %pairs = ( 
-	verb		  => 'ListRecords', 
-    );
+    my $uri = $self->{ baseURL }->clone();
 
-    foreach ( qw( metadataPrefix from until set resumptionToken ) ) {
-	if ( exists( $opts{ $_ } ) ) {
-	    $pairs{ $_ } = $opts{ $_ };
-	}
-    }
-    my $uri = $self->{ baseURL };
-    $uri->query_form( %pairs );
+    $uri->query_form( verb => 'ListRecords', 
+        map { (defined $opts{$_}) ? ($_ => $opts{$_}) : () } qw( metadataPrefix from until set resumptionToken )
+      );
 
     my $list = Net::OAI::ListRecords->new( $self->_get( $uri ), 
 	metadataHandler => $opts{ metadataHandler },
@@ -546,16 +538,11 @@ sub listIdentifiers {
     croak( "listIdentifiers(): metadataPrefix is a required parameter" ) 
 	if ( ! exists( $opts{ metadataPrefix } )
 	    and ! exists( $opts{ resumptionToken } ) );
-    my $uri = $self->{ baseURL };
-    my %pairs = (
-	verb		=> 'ListIdentifiers', 
-    );
-    foreach ( qw( metadataPrefix from until set resumptionToken ) ) {
-	if ( exists( $opts{ $_ } ) ) {
-	    $pairs{ $_ } = $opts{ $_ };
-	}
-    }
-    $uri->query_form( %pairs );
+    my $uri = $self->{ baseURL }->clone();
+
+    $uri->query_form( verb => 'ListIdentifiers', 
+        map { (defined $opts{$_}) ? ($_ => $opts{$_}) : () } qw( metadataPrefix from until set resumptionToken )
+      );
 
     my $list = Net::OAI::ListIdentifiers->new( $self->_get( $uri ) );
     return( $list ) if $list->{ error };
@@ -605,12 +592,12 @@ spec and the Net::OAI::ListSets docs.
 
 sub listSets {
     my ( $self, %opts ) = @_;
-    my %pairs = ( verb => 'ListSets' );
-    if ( exists( $opts{ resumptionToken } ) ) {
-	$pairs{ resumptionToken } = $opts{ resumptionToken };
-    }
-    my $uri = $self->{ baseURL };
-    $uri->query_form( %pairs );
+
+    my $uri = $self->{ baseURL }->clone();
+
+    $uri->query_form( verb => 'ListSets', 
+        map { (defined $opts{$_}) ? ($_ => $opts{$_}) : () } qw( resumptionToken )
+      );
 
     my $list = Net::OAI::ListSets->new( $self->_get( $uri ) );
     return( $list ) if $list->{ error };
@@ -631,7 +618,7 @@ sub listSets {
 
 =head2 baseURL()
 
-Gets or sets the base URL for the repository being harvested.
+Gets or sets the base URL for the repository being harvested (as M<URI>).
 
     $harvester->baseURL( 'http://memory.loc.gov/cgi-bin/oai2_0' );
 
@@ -644,12 +631,13 @@ Or if you want to know what the current baseURL is
 sub baseURL {
     my ( $self, $url ) = @_;
     if ( $url ) { $self->{ baseURL } = URI->new( $url ); } 
-# The HTTP UserAgent modifies its URI object upon execution,
-# therefore we have to reconstruct: trim the query part ...
-    my $c = $self->{ baseURL }->canonical();
-    if ( $c && ($c =~ /^([^\?]*)\?/) ) {  # $c might be undefined
-        return $1};
-    return $c;
+## The HTTP UserAgent modifies its URI object upon execution,
+## therefore we'll always provide a clone <s>have to reconstruct: trim the query part ...</s>
+#    my $c = $self->{ baseURL };           # ->canonical();
+#    if ( $c && ($c =~ /^([^\?]*)\?/) ) {  # $c might be undefined
+#        return $1};
+#    return $c;
+    return $self->{ baseURL };
 }
 
 =head2 userAgent()
@@ -938,6 +926,10 @@ Ed Summers <ehs@pobox.com>
 =item *
 
 Martin Emmerich <Martin.Emmerich@oew.de>
+
+=item *
+
+Thomas Berger <ThB@gymel.com>
 
 =back
 

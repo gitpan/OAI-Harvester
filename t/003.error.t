@@ -20,8 +20,8 @@ subtest 'Bad host' => sub {
     SKIP: {
         skip "LWP did not propagate DNS resolution issue?", 6 unless defined $e;
 
-        like( $i->errorCode(), qr/^50[03]$/, 'Catch HTTP error code ('.$i->errorCode().')' );
-        like( $i->errorString(), qr/^HTTP Level Error: \S/, 'Catch HTTP error string ('.$i->errorString().')' );
+        like( $i->errorCode(), qr/^50[03]$/, "Catch HTTP error code for unresolvable host (50X)" );
+        like( $i->errorString(), qr/^HTTP Level Error: \S/, "Catch HTTP error string for 'no host' (HTTP Level ...)" );
 
         isa_ok( $e, 'HTTP::Response' );
 
@@ -43,8 +43,8 @@ subtest 'Cannot connect' => sub {
     SKIP: {
         skip "LWP did not propagate no connection error?", 6 unless defined $e;
 
-        like( $i->errorCode(), qr/^(404|50[034])/, 'Catch HTTP error code ('.$i->errorCode().')' );
-        like( $i->errorString(), qr/^HTTP Level Error: \S/, 'Catch HTTP error string ('.$i->errorString().')' );
+        like( $i->errorCode(), qr/^(404|50[034])/, "Catch HTTP error code 'cannot connect' (40X or 50X)" );
+        like( $i->errorString(), qr/^HTTP Level Error: \S/, "Catch HTTP error string for 'cannot connect' (HTTP Level ...)" );
 
         isa_ok( $e, 'HTTP::Response' );
         is( $e->code, $i->errorCode(), 'HTTP error code' );
@@ -65,8 +65,8 @@ subtest 'Bad URL path' => sub {
     SKIP: {
         skip "LWP did not propagate HTTP path error?", 6 unless defined $e;
 
-        is( $i->errorCode(), '404', 'Catch HTTP error code ('.$i->errorCode().')' );
-        like( $i->errorString(), qr/^HTTP Level Error: \S/, 'Catch HTTP error string ('.$i->errorString().')' );
+        is( $i->errorCode(), '404', "Catch HTTP error code 'not found' (404)" );
+        like( $i->errorString(), qr/^HTTP Level Error: \S/, "Catch error string for 'not found' (HTTP Level ...)" );
 
         isa_ok( $e, 'HTTP::Response' );
         is( $e->code, $i->errorCode(), 'HTTP error code' );
@@ -79,18 +79,15 @@ subtest 'Bad URL path' => sub {
 
 subtest 'content parsing error' => sub {
     plan tests => 4;
-    my $h = new_ok('Net::OAI::Harvester' => [ 'baseURL' => 'http://www.yahoo.com' ]);
+    my $url = 'http://www.yahoo.com';
+    my $h = new_ok('Net::OAI::Harvester' => [ 'baseURL' => $url ]);
 
     my $i = $h->identify();
     isa_ok( $i, 'Net::OAI::Identify' );
     is( $i->is_error(), -1, 'is_error == -1 for no valid OAI response');
 
-    my $HTE;
-    if ( my $e = $i->HTTPError() ) {
-        $HTE = "HTTP Error ".$e->status_line;
-        $HTE .= " [Retry-After: " . $i->HTTPRetryAfter() . "]" if $e->code() == 503;
-      }
     SKIP: {
+        my $HTE = HTE($i, $url);
         skip $HTE, 1 if $HTE;
 
         like( $i->errorCode(), qr/^xml(Content|Parse)Error$/, 'caught XML content error' );
@@ -102,16 +99,13 @@ subtest 'content parsing error' => sub {
 subtest 'missing parameter' => sub {
     plan tests => 5;
 
-    my $h = new_ok('Net::OAI::Harvester' => [ baseURL => 'http://memory.loc.gov/cgi-bin/oai2_0' ]);
+    my $repo = 'http://memory.loc.gov/cgi-bin/oai2_0';
+    my $h = new_ok('Net::OAI::Harvester' => [ baseURL => $repo ]);
     my $l = $h->listRecords( 'metadataPrefix' => undef );
     isa_ok( $l, 'Net::OAI::ListRecords' );
 
-    my $HTE;
-    if ( my $e = $l->HTTPError() ) {
-        $HTE = "HTTP Error ".$e->status_line;
-        $HTE .= " [Retry-After: ".$l->HTTPRetryAfter()."]" if $e->code() == 503;
-      }
     SKIP: {
+        my $HTE = HTE($l, $repo);
         skip $HTE, 3 if $HTE;
 
         is($l->is_error(), 1, 'is_error == 1 for OAI error response');
@@ -123,16 +117,13 @@ subtest 'missing parameter' => sub {
 subtest 'unsuitable parameter' => sub {
     plan tests => 5;
 
-    my $h = new_ok('Net::OAI::Harvester' => [ baseURL => 'http://memory.loc.gov/cgi-bin/oai2_0' ]);
+    my $repo = 'http://memory.loc.gov/cgi-bin/oai2_0';
+    my $h = new_ok('Net::OAI::Harvester' => [ baseURL => $repo ]);
     my $r = $h->listRecords( 'metadataPrefix' => 'argh' );
     isa_ok( $r, 'Net::OAI::ListRecords' );
 
-    my $HTE;
-    if ( my $e = $r->HTTPError() ) {
-        $HTE = "HTTP Error ".$e->status_line;
-        $HTE .= " [Retry-After: ".$r->HTTPRetryAfter()."]" if $e->code() == 503;
-      }
     SKIP: {
+        my $HTE = HTE($r, $repo);
         skip $HTE, 3 if $HTE;
 
         is($r->is_error(), 1, 'is_error == 1 for OAI error response');
@@ -140,4 +131,17 @@ subtest 'unsuitable parameter' => sub {
         is($r->errorCode(), 'cannotDisseminateFormat', 'parsed OAI error code from server');
     }
 };
+
+
+sub HTE {
+    my ($r, $url) = @_;
+    my $hte;
+    if ( my $e = $r->HTTPError() ) {
+        $hte = "HTTP Error ".$e->status_line;
+	$hte .= " [Retry-After: ".$r->HTTPRetryAfter()."]" if $e->code() == 503;
+	diag("LWP condition when accessing $url:\n$hte");
+        note explain $e;
+      }
+   return $hte;
+}
 

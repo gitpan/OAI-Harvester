@@ -169,6 +169,11 @@ warn "who am I? ($tagName)";
 }
 
 
+sub ignorable_whitespace {
+    my ( $self, $characters ) = @_;
+    return $self->SUPER::ignorable_whitespace( $characters ) if $self->{ fwdAll } or $self->{ _insideMetadata };
+}
+
 sub characters {
     my ( $self, $characters ) = @_;
     $self->{ $self->{ _tagStack }[-1] } .= $characters->{ Data } if $self->{ _insideHeader };

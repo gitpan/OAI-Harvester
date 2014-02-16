@@ -24,20 +24,16 @@ sub xmlFiles {
 rmtree 't/dump' if -d 't/dump';
 mkdir 't/dump';
 
+my $repo = 'http://memory.loc.gov/cgi-bin/oai2_0';
 my $h = new_ok('Net::OAI::Harvester' => [
-    baseURL => 'http://memory.loc.gov/cgi-bin/oai2_0',
+    baseURL => $repo,
     dumpDir => 't/dump'
 ]);
 
 my $records = $h->listIdentifiers(metadataPrefix => 'oai_dc');
 
-my $HTE;
-if ( my $e = $records->HTTPError() ) {
-    $HTE = "HTTP Error ".$e->status_line;
-    $HTE .= " [Retry-After: ".$records->HTTPRetryAfter()."]" if $e->code() == 503;
-  }
-
 SKIP: {
+    my $HTE = HTE($records, $repo);
     skip $HTE, 4 if $HTE;
 
     # look for xml files
@@ -67,4 +63,18 @@ SKIP: {
 
 # final cleanup
 rmtree 't/dump' if -d 't/dump';
+
+
+
+sub HTE {
+    my ($r, $url) = @_;
+    my $hte;
+    if ( my $e = $r->HTTPError() ) {
+        $hte = "HTTP Error ".$e->status_line;
+	$hte .= " [Retry-After: ".$r->HTTPRetryAfter()."]" if $e->code() == 503;
+	diag("LWP condition when accessing $url:\n$hte");
+        note explain $e;
+      }
+   return $hte;
+}
 

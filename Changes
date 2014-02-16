@@ -2,7 +2,16 @@ Revision history for Perl extension Net::OAI::Harvester
 
 
 1.17
-1.16_07	
+1.16_09
+        - Net::OAI::NamespaceFilter as kind of generic metadata handler
+        - Queries are now constructed basing on a copy of the Harvester's baseURL
+        - pass parameters to URI->query_form() more reproducably,
+          (esp. "verb" should now always be first to accommodate some 
+          allegedly broken repositories)
+        - temporary? tests for correctness of LWP operations
+
+
+1.16_07	Tue, Apr 30 01:26:40 CEST 2013
         - added new methods: response(), responseDate(), error()
         - Smoke still tests failed on 'Bad Host' tests (wrong error codes
           induced by HTTP proxies?)
@@ -11,7 +20,6 @@ Revision history for Perl extension Net::OAI::Harvester
         - introducing alternative recordHandler for listRecords() and
           getRecord()
         - removed erroneous resumptionToken handling for identify()
-
 
 1.16_04	Fri Dec  7 09:49:03 CET 2012
 	- consider HTTP proxies in design of t/003.error.t

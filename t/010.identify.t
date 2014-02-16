@@ -8,19 +8,14 @@ use_ok( 'Net::OAI::Harvester' );
 
 ## a good call
 
-my $url = 'http://memory.loc.gov/cgi-bin/oai2_0';
-my $h = new_ok('Net::OAI::Harvester' => [ baseURL => $url ]);
+my $repo = 'http://memory.loc.gov/cgi-bin/oai2_0';
+my $h = new_ok('Net::OAI::Harvester' => [ baseURL => $repo ]);
 
 my $i = $h->identify();
 isa_ok( $i, 'Net::OAI::Identify', 'identity()' );
 
-my $HTE;
-if ( my $e = $i->HTTPError() ) {
-    $HTE = "HTTP Error ".$e->status_line;
-    $HTE .= " [Retry-After: ".$i->HTTPRetryAfter()."]" if $e->code() == 503;
-  }
-
 SKIP: {
+    my $HTE = HTE($i, $repo);
     skip $HTE, 10 if $HTE;
 
     ok( ! $i->errorCode(), 'errorCode()' );
@@ -30,7 +25,7 @@ SKIP: {
         plan tests => 3;
         like($i->responseDate(), qr/^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\dZ$/, 'OAI responseDate element' );
         my ($it, %ia) = $i->request();
-        is($it, $url, 'OAI response element text' );
+        is($it, $repo, 'OAI response element text' );
         is($ia{ verb }, 'Identify', 'OAI verb' );
       };
 
@@ -51,15 +46,12 @@ SKIP: {
 }
 
 ## make sure we don't get stuff from sub descriptions
-$h = new_ok('Net::OAI::Harvester' => [ baseURL => 'http://oaigateway.grainger.uiuc.edu/oai.asp' ]);
+$repo = 'http://oaigateway.grainger.uiuc.edu/oai.asp';
+$h = new_ok('Net::OAI::Harvester' => [ baseURL => $repo ]);
 $i = $h->identify();
-undef $HTE;
-if ( my $e = $i->HTTPError() ) {
-    $HTE = "HTTP Error ".$e->status_line;
-    $HTE .= " [Retry-After: ".$i->HTTPRetryAfter()."]" if $e->code() == 503;
-  }
 
 SKIP: {
+    my $HTE = HTE($i, $repo);
     skip $HTE, 1 if $HTE;
 
     is( $i->repositoryName(), 
@@ -68,4 +60,15 @@ SKIP: {
     );
 }
 
+sub HTE {
+    my ($r, $url) = @_;
+    my $hte;
+    if ( my $e = $r->HTTPError() ) {
+        $hte = "HTTP Error ".$e->status_line;
+	$hte .= " [Retry-After: ".$r->HTTPRetryAfter()."]" if $e->code() == 503;
+	diag("LWP condition when accessing $url:\n$hte");
+        note explain $e;
+      }
+   return $hte;
+}
 

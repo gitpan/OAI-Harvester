@@ -15,6 +15,7 @@ lib/Net/OAI/ListRecords.pm
 lib/Net/OAI/ListSets.pm
 lib/Net/OAI/Record.pm
 lib/Net/OAI/Record/Header.pm
+lib/Net/OAI/Record/NamespaceFilter.pm
 lib/Net/OAI/Record/OAI_DC.pm
 lib/Net/OAI/ResumptionToken.pm
 Makefile.PL
@@ -23,6 +24,7 @@ META.json
 META.yml
 README
 t/000.harvester.t
+t/000a.check-lwp.t
 t/001.ua.t
 t/002.parser.t
 t/003.error.t
@@ -37,6 +39,7 @@ t/050.listrecords.t
 t/055.listallrecords.t
 t/060.listsets.t
 t/070.dump.t
+t/075.plug.t
 t/MyMDHandler.pm
 t/MyRCHandler.pm
 t/YourMDHandler.pm

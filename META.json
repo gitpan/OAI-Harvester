@@ -2,7 +2,8 @@
    "abstract" : "A package for harvesting metadata using OAI-PMH",
    "author" : [
       "Ed Summers <ehs@pobox.com>",
-      "Martin Emmerich <Martin.Emmerich@oew.de>"
+      "Martin Emmerich <Martin.Emmerich@oew.de>",
+      "Thomas Berger <ThB@gymel.com>"
    ],
    "dynamic_config" : 1,
    "generated_by" : "Module::Build version 0.38, CPAN::Meta::Converter version 2.110440",
@@ -53,7 +54,7 @@
       },
       "Net::OAI::Harvester" : {
          "file" : "lib/Net/OAI/Harvester.pm",
-         "version" : "1.16_08"
+         "version" : "1.16_09"
       },
       "Net::OAI::Identify" : {
          "file" : "lib/Net/OAI/Identify.pm",
@@ -83,6 +84,10 @@
          "file" : "lib/Net/OAI/Record/Header.pm",
          "version" : "v1.1.0"
       },
+      "Net::OAI::Record::NamespaceFilter" : {
+         "file" : "lib/Net/OAI/Record/NamespaceFilter.pm",
+         "version" : "v1.1.0"
+      },
       "Net::OAI::Record::OAI_DC" : {
          "file" : "lib/Net/OAI/Record/OAI_DC.pm",
          "version" : "v1.1.0"
@@ -98,5 +103,5 @@
          "http://dev.perl.org/licenses/"
       ]
    },
-   "version" : "1.16_08"
+   "version" : "1.16_09"
 }
